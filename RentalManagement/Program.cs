@@ -3,6 +3,10 @@ using System.IO;
 using System.Reflection;
 using Microsoft.OpenApi.Models;
 
+using O9d.AspNet.FluentValidation;
+using FluentValidation.AspNetCore;
+using FluentValidation;
+
 using Microsoft.EntityFrameworkCore;
 using RentalManagement.Contexts;
 
@@ -13,11 +17,14 @@ namespace RentalManagement
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+            builder.Services.AddFluentValidationAutoValidation().AddFluentValidationClientsideAdapters();
 
             // Add services to the container.
+            builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
             builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSql")));
 
 
             builder.Services.AddControllers();
@@ -52,15 +59,17 @@ namespace RentalManagement
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
+                app.UseDeveloperExceptionPage();
                 app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "RentalManagement API v1"));
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "RentalManagement API v1");
+                    c.RoutePrefix = string.Empty;
+                });
             }
 
             app.UseHttpsRedirection();
-
             app.UseAuthorization();
-
-
             app.MapControllers();
 
             app.Run();

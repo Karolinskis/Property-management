@@ -1,4 +1,4 @@
-namespace RentalManagement.Models;
+namespace RentalManagement.Entities;
 
 public enum Status
 {
