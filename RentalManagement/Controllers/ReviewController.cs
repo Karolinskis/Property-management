@@ -1,16 +1,14 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
+using O9d.AspNet.FluentValidation;
 using RentalManagement.Contexts;
 using RentalManagement.Entities;
+using RentalManagement.Entities.DTOs;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace RentalManagement.Controllers
 {
-    // TODO: You should be able to get a list of all reviews for a specific place
-    // TODO: You should be able to get a specific review by Reservation ID
-    // TODO: You should be able to get a review by it's ID
-
     [ApiController]
     [Route("api/[controller]")]
     public class ReviewController : ControllerBase
@@ -23,25 +21,46 @@ namespace RentalManagement.Controllers
         }
 
         [HttpGet]
+        [Route("place/{placeId}")]
         [SwaggerOperation(Summary = "Gets all Reviews for a specific Place", Description = "Gets all Reviews for a specific Place from the database.")]
-        [SwaggerResponse(StatusCodes.Status200OK, "The Reviews were found.", typeof(IEnumerable<Review>))]
-        public async Task<ActionResult<IEnumerable<Review>>> GetReviews([FromQuery] int placeId)
+        [SwaggerResponse(StatusCodes.Status200OK, "The Reviews were found.", typeof(IEnumerable<ReviewDto>))]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "The Place was not found.", typeof(ValidationProblemDetails))]
+        public async Task<ActionResult<IEnumerable<ReviewDto>>> GetReviews(int placeId)
         {
-            return await _context.Reviews
-                                    .Where(r => _context.Reservations
-                                                        .Any(res => res.Id == r.ReservationId && res.Place.Id == placeId))
-                                    .ToListAsync();
+            var place = await _context.Places.FindAsync(placeId);
+            if (place == null)
+            {
+                return NotFound("Place not found.");
+            }
+
+            Console.WriteLine(placeId);
+
+            var reviews = await _context.Reviews
+                                        .Where(r => _context.Reservations
+                                                            .Any(res => res.Place.Id == placeId))
+                                        .ToListAsync();
+
+            Console.WriteLine(reviews.Count);
+
+            var reviewDtos = reviews.Select(r => new ReviewDto(
+                r.Id,
+                r.ReservationId,
+                r.Rating,
+                r.Comment
+            )).ToList();
+
+            return Ok(reviewDtos);
         }
 
         [HttpGet]
-        [Route("reservation/{id}")]
+        [Route("reservation/{reservationId}")]
         [SwaggerOperation(Summary = "Gets a Review by Reservation ID", Description = "Gets a Review by Reservation ID from the database.")]
-        [SwaggerResponse(StatusCodes.Status200OK, "The Review was found.", typeof(Review))]
+        [SwaggerResponse(StatusCodes.Status200OK, "The Review was found.", typeof(ReviewDto))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "The Review was not found.", typeof(ValidationProblemDetails))]
-        public async Task<ActionResult<Review>> GetReviewByReservationId(int id)
+        public async Task<ActionResult<ReviewDto>> GetReviewByReservationId(int reservationId)
         {
             var review = await _context.Reviews
-                                      .Where(r => r.ReservationId == id)
+                                      .Where(r => r.ReservationId == reservationId)
                                       .FirstOrDefaultAsync();
 
             if (review == null)
@@ -49,15 +68,22 @@ namespace RentalManagement.Controllers
                 return NotFound();
             }
 
-            return review;
+            var dto = new ReviewDto(
+                review.Id,
+                review.ReservationId,
+                review.Rating,
+                review.Comment
+            );
+
+            return dto;
         }
 
         [HttpGet]
         [Route("{id}")]
         [SwaggerOperation(Summary = "Gets a Review by ID", Description = "Gets a Review by ID from the database.")]
-        [SwaggerResponse(StatusCodes.Status200OK, "The Review was found.", typeof(Review))]
+        [SwaggerResponse(StatusCodes.Status200OK, "The Review was found.", typeof(ReviewDto))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "The Review was not found.", typeof(ValidationProblemDetails))]
-        public async Task<ActionResult<Review>> GetReview(int id)
+        public async Task<ActionResult<ReviewDto>> GetReview(int id)
         {
             var review = await _context.Reviews.FindAsync(id);
 
@@ -66,56 +92,80 @@ namespace RentalManagement.Controllers
                 return NotFound();
             }
 
-            return review;
+            var dto = new ReviewDto(
+                review.Id,
+                review.ReservationId,
+                review.Rating,
+                review.Comment
+            );
+
+            return dto;
         }
 
         [HttpPost]
         [SwaggerOperation(Summary = "Creates a new Review", Description = "Creates a new Review in the database.")]
-        [SwaggerResponse(StatusCodes.Status201Created, "The Review was created.", typeof(Review))]
-        [SwaggerResponse(StatusCodes.Status400BadRequest, "The Review is invalid.", typeof(ValidationProblemDetails))]
-        public async Task<ActionResult<Review>> CreateReview(Review review)
+        [SwaggerResponse(StatusCodes.Status201Created, "The Review was created.", typeof(ReviewDto))]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "A review for this reservation already exists.", typeof(ValidationProblemDetails))]
+        public async Task<ActionResult<ReviewDto>> CreateReview([Validate] CreateReviewDto createReviewDto)
         {
-            // FIXME: You should be able to create only one review per reservation
+            var review = new Review
+            {
+                ReservationId = createReviewDto.ReservationId,
+                Rating = createReviewDto.Rating,
+                Comment = createReviewDto.Comment
+            };
+
+            if (review.Rating < 1 || review.Rating > 5)
+            {
+                return BadRequest("Rating must be between 1 and 5.");
+            }
+
+            var existingReview = await _context.Reviews
+                                        .AnyAsync(r => r.ReservationId == review.ReservationId);
+
+            if (existingReview)
+            {
+                return BadRequest("A review for this reservation already exists.");
+            }
 
             await _context.Reviews.AddAsync(review);
             await _context.SaveChangesAsync();
 
-            // return CreatedAtAction(nameof(CreateReview), new { id = review.Id }, review);
-            return CreatedAtAction(nameof(CreateReview), review);
+            return CreatedAtAction(nameof(CreateReview), new { id = review.Id }, review);
         }
 
         [HttpPut]
         [Route("{id}")]
         [SwaggerOperation(Summary = "Updates a Review by ID", Description = "Updates a Review by ID in the database.")]
-        [SwaggerResponse(StatusCodes.Status200OK, "The Review was updated.", typeof(Review))]
+        [SwaggerResponse(StatusCodes.Status200OK, "The Review was updated.", typeof(ReviewDto))]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "The Review is invalid.", typeof(ValidationProblemDetails))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "The Review was not found.", typeof(ValidationProblemDetails))]
-        public async Task<ActionResult<Review>> UpdateReview(int id, Review review)
+        public async Task<ActionResult<ReviewDto>> UpdateReview(int id, UpdateReviewDto updateReviewDto)
         {
-            if (id != review.Id)
+            var review = await _context.Reviews.FindAsync(id);
+
+            if (review == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            _context.Entry(review).State = EntityState.Modified;
-
-            try
+            if (review.Rating < 1 || review.Rating > 5)
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ReviewExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return BadRequest("Rating must be between 1 and 5.");
             }
 
-            return review;
+            review.Rating = updateReviewDto.Rating;
+            review.Comment = updateReviewDto.Comment;
+
+            await _context.SaveChangesAsync();
+
+            return new ReviewDto(
+                review.Id,
+                review.ReservationId,
+                review.Rating,
+                review.Comment
+            );
+
         }
 
         private bool ReviewExists(int id)

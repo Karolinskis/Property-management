@@ -71,8 +71,8 @@ Sistemos paskirtis:
 ```mermaid
 classDiagram
 direction LR
-Place "1" --> "0..*" Rent
-Rent "1" --> "0..1" Review
+Place "1" --> "0..*" Reservation
+Reservation "1" --> "0..1" Review
 class Place {
     int roomsNum
     int size
@@ -80,7 +80,7 @@ class Place {
     string adress
     float price
 }
-class Rent {
+class Reservation {
     dateTime date
     status status
     dateTime start

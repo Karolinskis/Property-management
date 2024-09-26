@@ -22,18 +22,32 @@ namespace RentalManagement.Controllers
 
         [HttpGet]
         [SwaggerOperation(Summary = "Gets all places", Description = "Gets all places from the database.")]
-        [SwaggerResponse(StatusCodes.Status200OK, "The places were found.", typeof(IEnumerable<Place>))]
-        public async Task<ActionResult<IEnumerable<Place>>> GetPlaces()
+        [SwaggerResponse(StatusCodes.Status200OK, "The places were found.", typeof(IEnumerable<PlaceDto>))]
+        public async Task<ActionResult<IEnumerable<PlaceDto>>> GetPlaces()
         {
-            return await _context.Places.ToListAsync();
+            var places = await _context.Places.ToListAsync();
+
+            var dto = places.Select(p =>
+            {
+                return new PlaceDto(
+                    Id: p.Id,
+                    RoomsCount: p.RoomsCount,
+                    Size: p.Size,
+                    Address: p.Address,
+                    Description: p.Description,
+                    Price: p.Price
+                );
+            });
+
+            return Ok(dto);
         }
 
         [HttpGet]
         [Route("{id}")]
         [SwaggerOperation(Summary = "Gets a place by ID", Description = "Gets a place by ID from the database.")]
-        [SwaggerResponse(StatusCodes.Status200OK, "The place was found.", typeof(Place))]
+        [SwaggerResponse(StatusCodes.Status200OK, "The place was found.", typeof(PlaceDto))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "The place was not found.", typeof(ValidationProblemDetails))]
-        public async Task<ActionResult<Place>> GetPlace(int id)
+        public async Task<ActionResult<PlaceDto>> GetPlace(int id)
         {
             var place = await _context.Places.FindAsync(id);
 
@@ -42,12 +56,14 @@ namespace RentalManagement.Controllers
                 return NotFound();
             }
 
-            return place;
+            var dto = new PlaceDto(place.Id, place.RoomsCount, place.Size, place.Address, place.Description, place.Price);
+
+            return dto;
         }
 
         [HttpPost]
         [SwaggerOperation(Summary = "Creates a new place", Description = "Creates a new place in the database.")]
-        [SwaggerResponse(StatusCodes.Status201Created, "The place was created.", typeof(Place))]
+        [SwaggerResponse(StatusCodes.Status201Created, "The place was created.", typeof(PlaceDto))]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "The place is invalid.", typeof(ValidationProblemDetails))]
         public async Task<ActionResult<PlaceDto>> CreatePlace([Validate] CreatePlaceDto createPlaceDto)
         {
@@ -59,6 +75,11 @@ namespace RentalManagement.Controllers
                 Description = createPlaceDto.Description,
                 Price = createPlaceDto.Price
             };
+
+            if (place.Price < 0)
+            {
+                return BadRequest("Price cannot be negative.");
+            }
 
             _context.Places.Add(place);
             await _context.SaveChangesAsync();
@@ -79,7 +100,7 @@ namespace RentalManagement.Controllers
         [HttpPut]
         [Route("{id}")]
         [SwaggerOperation(Summary = "Updates a place by ID", Description = "Updates a place by ID in the database.")]
-        [SwaggerResponse(StatusCodes.Status200OK, "The place was updated.", typeof(Place))]
+        [SwaggerResponse(StatusCodes.Status200OK, "The place was updated.", typeof(PlaceDto))]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "The place is invalid.", typeof(ValidationProblemDetails))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "The place was not found.", typeof(ValidationProblemDetails))]
         public async Task<ActionResult<PlaceDto>> UpdatePlace(int id, [Validate] UpdatePlaceDto updatePlaceDto)
@@ -109,7 +130,7 @@ namespace RentalManagement.Controllers
         [SwaggerOperation(Summary = "Deletes a place by ID", Description = "Deletes a place by ID from the database.")]
         [SwaggerResponse(StatusCodes.Status200OK, "The place was deleted.")]
         [SwaggerResponse(StatusCodes.Status404NotFound, "The place was not found.", typeof(ValidationProblemDetails))]
-        public async Task<ActionResult<Place>> DeletePlace(int id)
+        public async Task<ActionResult<IActionResult>> DeletePlace(int id)
         {
             var place = await _context.Places.FindAsync(id);
 

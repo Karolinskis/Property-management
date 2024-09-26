@@ -17,7 +17,6 @@ public class UpdateReviewDtoValidator : AbstractValidator<UpdateReviewDto>
 {
     public UpdateReviewDtoValidator()
     {
-        RuleFor(o => o.ReservationId).GreaterThan(0).NotNull().NotEmpty();
         RuleFor(o => o.Rating).InclusiveBetween(1, 5).NotNull().NotEmpty();
     }
 }
