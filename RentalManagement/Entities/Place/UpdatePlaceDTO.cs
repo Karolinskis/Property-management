@@ -1,11 +1,7 @@
-using FluentValidation;
-
 namespace RentalManagement.Entities.DTOs;
 
-public class PlaceDTO
+public class UpdatePlaceDTO
 {
-    /// <example>1</example>
-    public int Id { get; set; }
     /// <example>3</example>
     public int RoomsCount { get; set; }
     /// <example>100</example>
@@ -17,9 +13,8 @@ public class PlaceDTO
     /// <example>100.00</example>
     public float Price { get; set; }
 
-    public PlaceDTO(int id, int roomsCount, int size, string address, string? description, float price)
+    public UpdatePlaceDTO(int roomsCount, int size, string address, string? description, float price)
     {
-        Id = id;
         RoomsCount = roomsCount;
         Size = size;
         Address = address;

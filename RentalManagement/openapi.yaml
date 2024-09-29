@@ -1,0 +1,1175 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "RentalManagement API",
+    "description": "An ASP.NET Core Web API for managing rentals",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/Places": {
+      "get": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Gets a place by ID from the database",
+        "responses": {
+          "200": {
+            "description": "The places were found.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlaceDTO"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlaceDTO"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlaceDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Creates a new place",
+        "requestBody": {
+          "description": "The place to create",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePlaceDTO"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePlaceDTO"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePlaceDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceDTO"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceDTO"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceDTO"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "The place was created."
+          },
+          "400": {
+            "description": "The place is invalid."
+          }
+        }
+      }
+    },
+    "/api/Places/{placeId}": {
+      "get": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Gets a place by ID",
+        "parameters": [
+          {
+            "name": "placeId",
+            "in": "path",
+            "description": "ID of the place to get",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The place was found.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceDTO"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceDTO"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The place was not found."
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Updates a place by ID",
+        "parameters": [
+          {
+            "name": "placeId",
+            "in": "path",
+            "description": "ID of the place to update",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Updated information of the place",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePlaceDTO"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePlaceDTO"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePlaceDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The place was updated.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceDTO"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceDTO"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The place is invalid."
+          },
+          "404": {
+            "description": "The place was not found."
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Deletes a place by ID",
+        "parameters": [
+          {
+            "name": "placeId",
+            "in": "path",
+            "description": "Place to delete",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/IActionResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IActionResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IActionResult"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "The place was deleted."
+          },
+          "404": {
+            "description": "The place was not found."
+          }
+        }
+      }
+    },
+    "/api/Place/{placeId}/Reservations": {
+      "get": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Gets all Reservations for a specific Place",
+        "parameters": [
+          {
+            "name": "placeId",
+            "in": "path",
+            "description": "ID of the place to get reservations from",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The Reservations were found.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReservationDTO"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReservationDTO"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReservationDTO"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The Place was not found."
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Creates a new Reservation",
+        "parameters": [
+          {
+            "name": "placeId",
+            "in": "path",
+            "description": "ID of the place to create reservation on",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Reservation information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReservationDTO"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReservationDTO"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReservationDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationDTO"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationDTO"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationDTO"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "The Reservation was created."
+          },
+          "400": {
+            "description": "The Reservation is invalid."
+          },
+          "404": {
+            "description": "The Place was not found."
+          }
+        }
+      }
+    },
+    "/api/Place/{placeId}/Reservations/{reservationId}": {
+      "get": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Gets a Reservation by ID",
+        "parameters": [
+          {
+            "name": "placeId",
+            "in": "path",
+            "description": "ID of the place to get reservation from",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "reservationId",
+            "in": "path",
+            "description": "ID of the reservation",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The Reservation was found.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationDTO"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationDTO"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The Place was not found."
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Updates a Reservation by ID",
+        "parameters": [
+          {
+            "name": "placeId",
+            "in": "path",
+            "description": "ID of the place that the reservation is a part of",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "reservationId",
+            "in": "path",
+            "description": "ID of the reservation to update",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Updated reservation information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReservationDTO"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReservationDTO"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReservationDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The Reservation was updated.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationDTO"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationDTO"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The updated Reservation is invalid."
+          },
+          "404": {
+            "description": "The Reservation and/or Place was not found."
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Deletes a Reservation by its ID",
+        "parameters": [
+          {
+            "name": "placeId",
+            "in": "path",
+            "description": "ID of the place that the reservation is a part of",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "reservationId",
+            "in": "path",
+            "description": "ID of the reservation",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/IActionResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IActionResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IActionResult"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "The Reservation was deleted."
+          },
+          "400": {
+            "description": "The Reservation does not belong to the specified place."
+          },
+          "404": {
+            "description": "The Reservation and/or the place was not found."
+          }
+        }
+      }
+    },
+    "/api/Places/{placeId}/Reviews": {
+      "get": {
+        "tags": [
+          "Reviews"
+        ],
+        "summary": "Gets all Reviews for a specific Place",
+        "parameters": [
+          {
+            "name": "placeId",
+            "in": "path",
+            "description": "ID of the place",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The Reviews were found.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReviewDTO"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReviewDTO"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReviewDTO"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The Place was not found."
+          }
+        }
+      }
+    },
+    "/api/Places/{placeId}/Reservations/{reservationId}/Reviews": {
+      "get": {
+        "tags": [
+          "Reviews"
+        ],
+        "summary": "Gets a Review by the Reservation ID",
+        "parameters": [
+          {
+            "name": "placeId",
+            "in": "path",
+            "description": "ID of the reservation's place",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "reservationId",
+            "in": "path",
+            "description": "ID of the reservation",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The Review was found.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewDTO"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewDTO"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The Review or Place was not found."
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Reviews"
+        ],
+        "summary": "Creates a new Review",
+        "parameters": [
+          {
+            "name": "placeId",
+            "in": "path",
+            "description": "ID of the place that the reservation was made in",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "reservationId",
+            "in": "path",
+            "description": "ID of the reservation",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Review details",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReviewDTO"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReviewDTO"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReviewDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewDTO"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewDTO"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewDTO"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "The Review was created."
+          },
+          "400": {
+            "description": "A review for this reservation already exists."
+          },
+          "404": {
+            "description": "The Place or Reservation was not found."
+          }
+        }
+      }
+    },
+    "/api/Places/{placeId}/Reservations/{reservationId}/Reviews/{reviewId}": {
+      "put": {
+        "tags": [
+          "Reviews"
+        ],
+        "summary": "Updates a Review by ID",
+        "parameters": [
+          {
+            "name": "placeId",
+            "in": "path",
+            "description": "ID of the review's place",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "reservationId",
+            "in": "path",
+            "description": "ID of the review's reservation",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "reviewId",
+            "in": "path",
+            "description": "ID of the review",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Updated review information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReviewDTO"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReviewDTO"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReviewDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The Review was updated.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewDTO"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewDTO"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The Review is invalid."
+          },
+          "404": {
+            "description": "The Review was not found."
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Reviews"
+        ],
+        "summary": "Deletes a Review by its ID",
+        "parameters": [
+          {
+            "name": "placeId",
+            "in": "path",
+            "description": "ID of the review's place",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "reservationId",
+            "in": "path",
+            "description": "ID of the review's reservation",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "reviewId",
+            "in": "path",
+            "description": "ID of the review",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/IActionResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IActionResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IActionResult"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "The Review was deleted."
+          },
+          "400": {
+            "description": "The Review does not belong to the specified reservation."
+          },
+          "404": {
+            "description": "The Review was not found."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreatePlaceDTO": {
+        "type": "object",
+        "properties": {
+          "roomsCount": {
+            "type": "integer",
+            "format": "int32",
+            "example": 3
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "example": 100
+          },
+          "address": {
+            "type": "string",
+            "nullable": true,
+            "example": "1234 Main St, Springfield, IL 62701"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "example": "Beautiful place with a view of the park"
+          },
+          "price": {
+            "type": "number",
+            "format": "float",
+            "example": 1000
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateReservationDTO": {
+        "type": "object",
+        "properties": {
+          "startDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2021-09-01T00:00:00"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2021-09-01T00:00:00"
+          },
+          "price": {
+            "type": "number",
+            "format": "float",
+            "example": 100
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateReviewDTO": {
+        "type": "object",
+        "properties": {
+          "rating": {
+            "type": "integer",
+            "format": "int32",
+            "example": 5
+          },
+          "comment": {
+            "type": "string",
+            "nullable": true,
+            "example": "Great place!"
+          }
+        },
+        "additionalProperties": false
+      },
+      "IActionResult": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "PlaceDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32",
+            "example": 1
+          },
+          "roomsCount": {
+            "type": "integer",
+            "format": "int32",
+            "example": 3
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "example": 100
+          },
+          "address": {
+            "type": "string",
+            "nullable": true,
+            "example": "1234 Main St, Springfield, IL 62701"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "example": "Beautiful place with a view of the park"
+          },
+          "price": {
+            "type": "number",
+            "format": "float",
+            "example": 100
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReservationDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32",
+            "example": 1
+          },
+          "placeId": {
+            "type": "integer",
+            "format": "int32",
+            "example": 1
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2021-09-01T00:00:00"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2021-09-01T00:00:00"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2021-09-01T00:00:00"
+          },
+          "status": {
+            "type": "string",
+            "nullable": true,
+            "example": "Reserved"
+          },
+          "price": {
+            "type": "number",
+            "format": "float",
+            "example": 100
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReviewDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32",
+            "example": 1
+          },
+          "reservationId": {
+            "type": "integer",
+            "format": "int32",
+            "example": 1
+          },
+          "rating": {
+            "type": "integer",
+            "format": "int32",
+            "example": 5
+          },
+          "comment": {
+            "type": "string",
+            "nullable": true,
+            "example": "Great place!"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdatePlaceDTO": {
+        "type": "object",
+        "properties": {
+          "roomsCount": {
+            "type": "integer",
+            "format": "int32",
+            "example": 3
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "example": 100
+          },
+          "address": {
+            "type": "string",
+            "nullable": true,
+            "example": "1234 Main St, Springfield, IL 62701"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "example": "Beautiful place with a view of the park"
+          },
+          "price": {
+            "type": "number",
+            "format": "float",
+            "example": 100
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateReservationDTO": {
+        "type": "object",
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2021-09-01T00:00:00"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2021-09-01T00:00:00"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2021-09-01T00:00:00"
+          },
+          "status": {
+            "type": "string",
+            "nullable": true,
+            "example": "Reserved"
+          },
+          "price": {
+            "type": "number",
+            "format": "float",
+            "example": 100
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateReviewDTO": {
+        "type": "object",
+        "properties": {
+          "rating": {
+            "type": "integer",
+            "format": "int32",
+            "example": 5
+          },
+          "comment": {
+            "type": "string",
+            "nullable": true,
+            "example": "Great place!"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}
