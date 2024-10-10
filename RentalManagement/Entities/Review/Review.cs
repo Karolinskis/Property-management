@@ -12,4 +12,5 @@ public class Review
 
     [Required(ErrorMessage = "Comment is required.")]
     public required string Comment { get; set; }
+    public required Reservation Reservation { get; set; }
 }

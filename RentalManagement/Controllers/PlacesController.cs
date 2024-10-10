@@ -21,10 +21,9 @@ namespace RentalManagement.Controllers
         }
 
         /// <summary>
-        /// Gets a place by ID from the database
+        /// Get all places
         /// </summary>
-        /// <returns>A list of all places</returns>
-        /// <response code="200">The places were found.</response>
+        [SwaggerResponse(StatusCodes.Status200OK, "The places were found.", typeof(IEnumerable<PlaceDTO>))]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PlaceDTO>>> GetPlaces()
         {
@@ -46,12 +45,11 @@ namespace RentalManagement.Controllers
         }
 
         /// <summary>
-        /// Gets a place by ID
+        /// Gets a place by it's ID
         /// </summary>
         /// <param name="placeId">ID of the place to get</param>
-        /// <returns>The place given in <paramref name="placeId"/></returns>
-        /// <response code="200">The place was found.</response>
-        /// <response code="404">The place was not found.</response>
+        [SwaggerResponse(StatusCodes.Status200OK, "The place was found.", typeof(PlaceDTO))]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "The place was not found.", typeof(ValidationProblemDetails))]
         [HttpGet]
         [Route("{placeId}")]
         public async Task<ActionResult<PlaceDTO>> GetPlace(int placeId)
@@ -72,9 +70,8 @@ namespace RentalManagement.Controllers
         /// Creates a new place
         /// </summary>
         /// <param name="createPlaceDto">The place to create</param>
-        /// <returns>The created place</returns>
-        /// <response code="201">The place was created.</response>
-        /// <response code="400">The place is invalid.</response>
+        [SwaggerResponse(StatusCodes.Status201Created, "The place was created.", typeof(PlaceDTO))]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "The place is invalid.", typeof(ValidationProblemDetails))]
         [HttpPost]
         public async Task<ActionResult<PlaceDTO>> CreatePlace([Validate] CreatePlaceDTO createPlaceDto)
         {
@@ -105,7 +102,7 @@ namespace RentalManagement.Controllers
                 place.Price
             );
 
-            return CreatedAtAction(nameof(GetPlace), new { id = place.Id }, placeDto);
+            return CreatedAtAction(nameof(GetPlace), new { placeId = place.Id }, placeDto);
         }
 
         /// <summary>
@@ -113,10 +110,9 @@ namespace RentalManagement.Controllers
         /// </summary>
         /// <param name="placeId">ID of the place to update</param>
         /// <param name="updatePlaceDto">Updated information of the place</param>
-        /// <returns>An updated place</returns>
-        /// <response code="200">The place was updated.</response>
-        /// <response code="400">The place is invalid.</response>
-        /// <response code="404">The place was not found.</response> 
+        [SwaggerResponse(StatusCodes.Status200OK, "The place was updated.", typeof(PlaceDTO))]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "The place is invalid.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "The place was not found.", typeof(ValidationProblemDetails))]
         [HttpPut]
         [Route("{placeId}")]
         public async Task<ActionResult<PlaceDTO>> UpdatePlace(int placeId, [Validate] UpdatePlaceDTO updatePlaceDto)
@@ -143,11 +139,11 @@ namespace RentalManagement.Controllers
         /// Deletes a place by ID
         /// </summary>
         /// <param name="placeId">Place to delete</param>
-        /// <response code="204">The place was deleted.</response>
-        /// <response code="404">The place was not found.</response>
+        [SwaggerResponse(StatusCodes.Status204NoContent, "The place was deleted.")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "The place was not found.", typeof(ValidationProblemDetails))]
         [HttpDelete]
         [Route("{placeId}")]
-        public async Task<ActionResult<IActionResult>> DeletePlace(int placeId)
+        public async Task<ActionResult> DeletePlace(int placeId)
         {
             var place = await _context.Places.FindAsync(placeId);
 

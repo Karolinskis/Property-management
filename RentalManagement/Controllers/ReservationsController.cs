@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using O9d.AspNet.FluentValidation;
@@ -9,7 +10,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace RentalManagement.Controllers
 {
     [ApiController]
-    [Route("api/Place/{placeId}/[controller]")]
+    [Route("api/Places/{placeId}/[controller]")]
     public class ReservationsController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -23,9 +24,8 @@ namespace RentalManagement.Controllers
         /// Gets all Reservations for a specific Place
         /// </summary>
         /// <param name="placeId">ID of the place to get reservations from</param>
-        /// <returns>A list of all Reservations of a place</returns>
-        /// <response code="200">The Reservations were found.</response>
-        /// <response code="404">The Place was not found.</response>
+        [SwaggerResponse(200, "The Reservations were found.", typeof(IEnumerable<ReservationDTO>))]
+        [SwaggerResponse(404, "The Place was not found.", typeof(ValidationProblemDetails))]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ReservationDTO>>> GetReservations(int placeId)
         {
@@ -59,9 +59,8 @@ namespace RentalManagement.Controllers
         /// </summary>
         /// <param name="placeId">ID of the place to get reservation from</param>
         /// <param name="reservationId">ID of the reservation</param>
-        /// <returns>A Reservation made for a specific place</returns>
-        /// <response code="200">The Reservation was found.</response>
-        /// <response code="404">The Place was not found.</response> 
+        [SwaggerResponse(200, "The Reservation was found.", typeof(ReservationDTO))]
+        [SwaggerResponse(404, "The Place was not found.", typeof(ValidationProblemDetails))]
         [HttpGet]
         [Route("{reservationId}")]
         public async Task<ActionResult<ReservationDTO>> GetReservation(int placeId, int reservationId)
@@ -95,19 +94,19 @@ namespace RentalManagement.Controllers
         /// </summary>
         /// <param name="placeId">ID of the place to create reservation on</param>
         /// <param name="createReservationDto">Reservation information</param>
-        /// <returns>The created reservation information</returns>
-        /// <response code="201">The Reservation was created.</response>
-        /// <response code="400">The Reservation is invalid.</response>
-        /// <response code="404">The Place was not found.</response>
+        [SwaggerResponse(201, "The Reservation was created.", typeof(ReservationDTO))]
+        [SwaggerResponse(400, "The Reservation is invalid.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(409, "The reservation dates overlap with an existing confirmed reservation.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(404, "The Place was not found.", typeof(ValidationProblemDetails))]
         [HttpPost]
         public async Task<ActionResult<ReservationDTO>> CreateReservation(int placeId, [Validate] CreateReservationDTO createReservationDto)
         {
-            var place = await _context.Places.FindAsync(placeId);
+            var place = await _context.Places.FirstOrDefaultAsync(p => p.Id == placeId);
             if (place == null)
                 return NotFound("Place not found");
 
-            if (Utils.HasConflictingReservations(_context, placeId, createReservationDto.StartDate, createReservationDto.EndDate))
-                return BadRequest("The reservation dates overlap with an existing confirmed reservation.");
+            if (Utils.HasConflictingReservations(_context, placeId, createReservationDto.StartDate.ToUniversalTime(), createReservationDto.EndDate.ToUniversalTime()))
+                return Conflict("The reservation dates overlap with an existing confirmed reservation.");
 
             // If the price is not set otherwise, calculate it based on the number of days
             float reservationPrice = 0;
@@ -130,7 +129,18 @@ namespace RentalManagement.Controllers
             await _context.Reservations.AddAsync(reservation);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(CreateReservation), new { id = reservation.Id }, reservation);
+            var reservationDto = new ReservationDTO
+            (
+                reservation.Id,
+                reservation.Place.Id,
+                reservation.CreatedAt,
+                reservation.StartDate,
+                reservation.EndDate,
+                reservation.Status.ToString(),
+                reservation.Price
+            );
+
+            return CreatedAtAction(nameof(CreateReservation), new { id = reservation.Id }, reservationDto);
         }
 
         /// <summary>
@@ -139,10 +149,9 @@ namespace RentalManagement.Controllers
         /// <param name="placeId">ID of the place that the reservation is a part of</param>
         /// <param name="reservationId">ID of the reservation to update</param>
         /// <param name="updateReservationDto">Updated reservation information</param>
-        /// <returns>Updated reservation information</returns>
-        /// <response code="200">The Reservation was updated.</response>
-        /// <response code="400">The updated Reservation is invalid.</response>
-        /// <response code="404">The Reservation and/or Place was not found.</response> 
+        [SwaggerResponse(200, "The Reservation was updated.", typeof(ReservationDTO))]
+        [SwaggerResponse(400, "The updated Reservation is invalid.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(404, "The Reservation and/or Place was not found.", typeof(ValidationProblemDetails))]
         [HttpPut]
         [Route("{reservationId}")]
         public async Task<ActionResult<ReservationDTO>> UpdateReservation(int placeId, int reservationId, [Validate] UpdateReservationDTO updateReservationDto)
@@ -157,13 +166,15 @@ namespace RentalManagement.Controllers
             if (existingReservation == null)
                 return NotFound("Reservation not found");
 
-            if (Utils.HasConflictingReservations(_context, existingReservation.Place.Id, updateReservationDto.StartDate, updateReservationDto.EndDate))
+            if (Utils.HasConflictingReservations(_context, existingReservation.Place.Id, updateReservationDto.StartDate.ToUniversalTime(), updateReservationDto.EndDate.ToUniversalTime()))
                 return BadRequest("The reservation dates overlap with an existing confirmed reservation.");
 
             existingReservation.StartDate = updateReservationDto.StartDate;
             existingReservation.EndDate = updateReservationDto.EndDate;
             existingReservation.Price = updateReservationDto.Price;
-            existingReservation.Status = Enum.Parse<Status>(updateReservationDto.Status);
+            if (!Enum.TryParse<Status>(updateReservationDto.Status, out Status statusResult))
+                return BadRequest("Invalid status");
+            existingReservation.Status = statusResult;
 
             _context.Entry(existingReservation).State = EntityState.Modified;
             await _context.SaveChangesAsync();
@@ -186,15 +197,14 @@ namespace RentalManagement.Controllers
         /// </summary>
         /// <param name="placeId">ID of the place that the reservation is a part of</param>
         /// <param name="reservationId">ID of the reservation</param>
-        /// <returns>No content</returns>
-        /// <response code="204">The Reservation was deleted.</response>
-        /// <response code="400">The Reservation does not belong to the specified place.</response>
-        /// <response code="404">The Reservation and/or the place was not found.</response> 
+        [SwaggerResponse(204, "The Reservation was deleted.")]
+        [SwaggerResponse(400, "The Reservation does not belong to the specified place.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(404, "The Reservation and/or the place was not found.", typeof(ValidationProblemDetails))]
         [HttpDelete]
         [Route("{reservationId}")]
-        public async Task<ActionResult<IActionResult>> DeleteReservation(int placeId, int reservationId)
+        public async Task<ActionResult> DeleteReservation(int placeId, int reservationId)
         {
-            var place = await _context.Places.FindAsync(placeId);
+            var place = await _context.Places.FirstOrDefaultAsync(p => p.Id == placeId);
             if (place == null)
                 return NotFound("Place not found");
 

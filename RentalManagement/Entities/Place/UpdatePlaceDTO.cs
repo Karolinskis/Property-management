@@ -9,11 +9,11 @@ public class UpdatePlaceDTO
     /// <example>1234 Main St, Springfield, IL 62701</example>
     public string Address { get; set; }
     /// <example>Beautiful place with a view of the park</example>
-    public string? Description { get; set; }
+    public string Description { get; set; }
     /// <example>100.00</example>
     public float Price { get; set; }
 
-    public UpdatePlaceDTO(int roomsCount, int size, string address, string? description, float price)
+    public UpdatePlaceDTO(int roomsCount, int size, string address, string description, float price)
     {
         RoomsCount = roomsCount;
         Size = size;

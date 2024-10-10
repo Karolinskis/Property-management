@@ -24,9 +24,8 @@ namespace RentalManagement.Controllers
         /// Gets all Reviews for a specific Place
         /// </summary>
         /// <param name="placeId">ID of the place</param>
-        /// <returns>A list of Reviews for the given <paramref name="placeId"/></returns>
-        /// <response code="200">The Reviews were found.</response>
-        /// <response code="404">The Place was not found.</response> 
+        [SwaggerResponse(StatusCodes.Status200OK, "The Reviews were found.", typeof(IEnumerable<ReviewDTO>))]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "The Place was not found.", typeof(ValidationProblemDetails))]
         [HttpGet]
         [Route("[controller]")]
         public async Task<ActionResult<IEnumerable<ReviewDTO>>> GetReviews(int placeId)
@@ -55,9 +54,8 @@ namespace RentalManagement.Controllers
         /// </summary>
         /// <param name="placeId">ID of the reservation's place</param>
         /// <param name="reservationId">ID of the reservation</param>
-        /// <returns>The specific reservation</returns>
-        /// <response code="200">The Review was found.</response>
-        /// <response code="404">The Review or Place was not found.</response> 
+        [SwaggerResponse(StatusCodes.Status200OK, "The Review was found.", typeof(ReviewDTO))]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "The Review or Place was not found.", typeof(ValidationProblemDetails))]
         [HttpGet]
         [Route("Reservations/{reservationId}/[controller]")]
         public async Task<ActionResult<ReviewDTO>> GetReviewByReservationId(int placeId, int reservationId)
@@ -67,12 +65,12 @@ namespace RentalManagement.Controllers
                 return NotFound("Place not found.");
 
             var reservation = await _context.Reservations
-                                            .Include(r => r.Place)
                                             .FirstOrDefaultAsync(r => r.Id == reservationId);
             if (reservation == null)
                 return NotFound("Reservation not found or does not belong to the specified place.");
 
             var review = await _context.Reviews
+                                    .Include(r => r.Reservation)
                                     .Where(r => r.ReservationId == reservationId)
                                     .FirstOrDefaultAsync();
 
@@ -95,10 +93,9 @@ namespace RentalManagement.Controllers
         /// <param name="placeId">ID of the place that the reservation was made in</param>
         /// <param name="reservationId">ID of the reservation</param>
         /// <param name="createReviewDto">Review details</param>
-        /// <returns>The created review</returns>
-        /// <response code="201">The Review was created.</response>
-        /// <response code="400">A review for this reservation already exists.</response>
-        /// <response code="404">The Place or Reservation was not found.</response> 
+        [SwaggerResponse(StatusCodes.Status201Created, "The Review was created.", typeof(ReviewDTO))]
+        [SwaggerResponse(StatusCodes.Status409Conflict, "A review for this reservation already exists.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "The Place or Reservation was not found.", typeof(ValidationProblemDetails))]
         [HttpPost]
         [Route("Reservations/{reservationId}/[controller]")]
         public async Task<ActionResult<ReviewDTO>> CreateReview(int placeId, int reservationId, [Validate] CreateReviewDTO createReviewDto)
@@ -116,6 +113,7 @@ namespace RentalManagement.Controllers
             var review = new Review
             {
                 ReservationId = reservationId,
+                Reservation = reservation,
                 Rating = createReviewDto.Rating,
                 Comment = createReviewDto.Comment
             };
@@ -124,7 +122,7 @@ namespace RentalManagement.Controllers
                                         .AnyAsync(r => r.ReservationId == review.ReservationId);
 
             if (existingReview)
-                return BadRequest("A review for this reservation already exists.");
+                return Conflict("A review for this reservation already exists.");
 
             await _context.Reviews.AddAsync(review);
             await _context.SaveChangesAsync();
@@ -139,10 +137,9 @@ namespace RentalManagement.Controllers
         /// <param name="reservationId">ID of the review's reservation</param>
         /// <param name="reviewId">ID of the review</param>
         /// <param name="updateReviewDto">Updated review information</param>
-        /// <returns>Updated review information</returns>
-        /// <response code="200">The Review was updated.</response>
-        /// <response code="400">The Review is invalid.</response>
-        /// <response code="404">The Review was not found.</response> 
+        [SwaggerResponse(StatusCodes.Status200OK, "The Review was updated.", typeof(ReviewDTO))]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "The Review is invalid.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "The Review was not found.", typeof(ValidationProblemDetails))]
         [HttpPut]
         [Route("Reservations/{reservationId}/[controller]/{reviewId}")]
         public async Task<ActionResult<ReviewDTO>> UpdateReview(int placeId, int reservationId, int reviewId, [Validate] UpdateReviewDTO updateReviewDto)
@@ -184,13 +181,12 @@ namespace RentalManagement.Controllers
         /// <param name="placeId">ID of the review's place</param>
         /// <param name="reservationId">ID of the review's reservation</param>
         /// <param name="reviewId">ID of the review</param>
-        /// <returns>No content</returns>
-        /// <response code="204">The Review was deleted.</response>
-        /// <response code="400">The Review does not belong to the specified reservation.</response>
-        /// <response code="404">The Review was not found.</response>
+        [SwaggerResponse(StatusCodes.Status204NoContent, "The Review was deleted.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "The Review does not belong to the specified reservation.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "The Review was not found.", typeof(ValidationProblemDetails))]
         [HttpDelete]
         [Route("Reservations/{reservationId}/[controller]/{reviewId}")]
-        public async Task<ActionResult<IActionResult>> DeleteReview(int placeId, int reservationId, int reviewId)
+        public async Task<ActionResult> DeleteReview(int placeId, int reservationId, int reviewId)
         {
             var place = await _context.Places.FindAsync(placeId);
             if (place == null)
