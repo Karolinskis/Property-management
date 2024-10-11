@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using O9d.AspNet.FluentValidation;
@@ -152,6 +151,7 @@ namespace RentalManagement.Controllers
         [SwaggerResponse(200, "The Reservation was updated.", typeof(ReservationDTO))]
         [SwaggerResponse(400, "The updated Reservation is invalid.", typeof(ValidationProblemDetails))]
         [SwaggerResponse(404, "The Reservation and/or Place was not found.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(422, "The updated Reservation is invalid", typeof(ValidationProblemDetails))]
         [HttpPut]
         [Route("{reservationId}")]
         public async Task<ActionResult<ReservationDTO>> UpdateReservation(int placeId, int reservationId, [Validate] UpdateReservationDTO updateReservationDto)
@@ -167,13 +167,13 @@ namespace RentalManagement.Controllers
                 return NotFound("Reservation not found");
 
             if (Utils.HasConflictingReservations(_context, existingReservation.Place.Id, updateReservationDto.StartDate.ToUniversalTime(), updateReservationDto.EndDate.ToUniversalTime()))
-                return BadRequest("The reservation dates overlap with an existing confirmed reservation.");
+                return Conflict("The reservation dates overlap with an existing confirmed reservation.");
 
             existingReservation.StartDate = updateReservationDto.StartDate;
             existingReservation.EndDate = updateReservationDto.EndDate;
             existingReservation.Price = updateReservationDto.Price;
             if (!Enum.TryParse<Status>(updateReservationDto.Status, out Status statusResult))
-                return BadRequest("Invalid status");
+                return UnprocessableEntity("Invalid status");
             existingReservation.Status = statusResult;
 
             _context.Entry(existingReservation).State = EntityState.Modified;

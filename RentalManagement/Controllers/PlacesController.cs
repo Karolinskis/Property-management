@@ -45,7 +45,7 @@ namespace RentalManagement.Controllers
         }
 
         /// <summary>
-        /// Gets a place by it's ID
+        /// Gets a place by its ID
         /// </summary>
         /// <param name="placeId">ID of the place to get</param>
         [SwaggerResponse(StatusCodes.Status200OK, "The place was found.", typeof(PlaceDTO))]
