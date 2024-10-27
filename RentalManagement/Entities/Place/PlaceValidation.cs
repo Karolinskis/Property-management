@@ -4,7 +4,7 @@ using RentalManagement.Entities.DTOs;
 
 namespace RentalManagement.Entities.Validation;
 
-public class CreatePlaceDtoValidator : AbstractValidator<CreatePlaceDto>
+public class CreatePlaceDtoValidator : AbstractValidator<CreatePlaceDTO>
 {
     public CreatePlaceDtoValidator()
     {
@@ -15,7 +15,7 @@ public class CreatePlaceDtoValidator : AbstractValidator<CreatePlaceDto>
     }
 }
 
-public class UpdatePlaceDtoValidator : AbstractValidator<UpdatePlaceDto>
+public class UpdatePlaceDtoValidator : AbstractValidator<UpdatePlaceDTO>
 {
     public UpdatePlaceDtoValidator()
     {

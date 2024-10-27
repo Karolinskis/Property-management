@@ -1,6 +1,7 @@
-service:
+services:
   postgres:
-    image: postgres:latest
-    environment: -POSTGRES_PASSWORD=postgrespw
+    image: postgres:16.4
+    environment:
+      - POSTGRES_PASSWORD=postgrespw
     ports:
       - 5432:5432
