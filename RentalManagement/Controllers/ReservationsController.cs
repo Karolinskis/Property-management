@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using O9d.AspNet.FluentValidation;
@@ -97,6 +98,7 @@ namespace RentalManagement.Controllers
         [SwaggerResponse(400, "The Reservation is invalid.", typeof(ValidationProblemDetails))]
         [SwaggerResponse(409, "The reservation dates overlap with an existing confirmed reservation.", typeof(ValidationProblemDetails))]
         [SwaggerResponse(404, "The Place was not found.", typeof(ValidationProblemDetails))]
+        [Authorize(Roles = "Owner, Tennant, Administrator")]
         [HttpPost]
         public async Task<ActionResult<ReservationDTO>> CreateReservation(int placeId, [Validate] CreateReservationDTO createReservationDto)
         {
@@ -122,7 +124,8 @@ namespace RentalManagement.Controllers
                 StartDate = createReservationDto.StartDate,
                 EndDate = createReservationDto.EndDate,
                 Status = Status.Pending,
-                Price = reservationPrice != 0 ? reservationPrice : createReservationDto.Price
+                Price = reservationPrice != 0 ? reservationPrice : createReservationDto.Price,
+                UserId = "FIXME" // FIXME
             };
 
             await _context.Reservations.AddAsync(reservation);
@@ -153,6 +156,7 @@ namespace RentalManagement.Controllers
         [SwaggerResponse(404, "The Reservation and/or Place was not found.", typeof(ValidationProblemDetails))]
         [SwaggerResponse(422, "The updated Reservation is invalid", typeof(ValidationProblemDetails))]
         [HttpPut]
+        [Authorize(Roles = "Owner, Tennant, Administrator")]
         [Route("{reservationId}")]
         public async Task<ActionResult<ReservationDTO>> UpdateReservation(int placeId, int reservationId, [Validate] UpdateReservationDTO updateReservationDto)
         {
@@ -201,6 +205,7 @@ namespace RentalManagement.Controllers
         [SwaggerResponse(400, "The Reservation does not belong to the specified place.", typeof(ValidationProblemDetails))]
         [SwaggerResponse(404, "The Reservation and/or the place was not found.", typeof(ValidationProblemDetails))]
         [HttpDelete]
+        [Authorize(Roles = "Owner, Tennant, Administrator")]
         [Route("{reservationId}")]
         public async Task<ActionResult> DeleteReservation(int placeId, int reservationId)
         {

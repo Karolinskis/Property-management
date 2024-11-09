@@ -1,3 +1,6 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -73,6 +76,7 @@ namespace RentalManagement.Controllers
         [SwaggerResponse(StatusCodes.Status201Created, "The place was created.", typeof(PlaceDTO))]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "The place is invalid.", typeof(ValidationProblemDetails))]
         [HttpPost]
+        [Authorize(Roles = UserRoles.Owner)]
         public async Task<ActionResult<PlaceDTO>> CreatePlace([Validate] CreatePlaceDTO createPlaceDto)
         {
             var place = new Place()
@@ -81,7 +85,8 @@ namespace RentalManagement.Controllers
                 Size = createPlaceDto.Size,
                 Address = createPlaceDto.Address,
                 Description = createPlaceDto.Description,
-                Price = createPlaceDto.Price
+                Price = createPlaceDto.Price,
+                UserId = HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub)
             };
 
             if (place.Price < 0)
@@ -114,6 +119,7 @@ namespace RentalManagement.Controllers
         [SwaggerResponse(StatusCodes.Status400BadRequest, "The place is invalid.", typeof(ValidationProblemDetails))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "The place was not found.", typeof(ValidationProblemDetails))]
         [HttpPut]
+        [Authorize(Roles = UserRoles.Owner)]
         [Route("{placeId}")]
         public async Task<ActionResult<PlaceDTO>> UpdatePlace(int placeId, [Validate] UpdatePlaceDTO updatePlaceDto)
         {
@@ -121,6 +127,13 @@ namespace RentalManagement.Controllers
 
             if (place is null)
                 return NotFound();
+
+            if (!HttpContext.User.IsInRole(UserRoles.Admin) &&
+                HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub) != place.UserId)
+            {
+                return Forbid();
+            }
+
 
             place.RoomsCount = updatePlaceDto.RoomsCount;
             place.Size = updatePlaceDto.Size;
@@ -142,6 +155,7 @@ namespace RentalManagement.Controllers
         [SwaggerResponse(StatusCodes.Status204NoContent, "The place was deleted.")]
         [SwaggerResponse(StatusCodes.Status404NotFound, "The place was not found.", typeof(ValidationProblemDetails))]
         [HttpDelete]
+        [Authorize(Roles = "Owner, Administrator")]
         [Route("{placeId}")]
         public async Task<ActionResult> DeletePlace(int placeId)
         {

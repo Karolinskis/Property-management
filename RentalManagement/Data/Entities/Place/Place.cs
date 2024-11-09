@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using RentalManagement.Auth;
 
 namespace RentalManagement.Entities;
 
@@ -14,5 +15,9 @@ public class Place
     public string? Description { get; set; }
     [Range(0, float.MaxValue, ErrorMessage = "Price must be greater than 0.")]
     public required float Price { get; set; }
+
+    [Required]
+    public required string UserId { get; set; }
+    public User User { get; set; }
 }
 

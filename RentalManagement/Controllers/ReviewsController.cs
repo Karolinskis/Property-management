@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -97,6 +98,7 @@ namespace RentalManagement.Controllers
         [SwaggerResponse(StatusCodes.Status409Conflict, "A review for this reservation already exists.", typeof(ValidationProblemDetails))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "The Place or Reservation was not found.", typeof(ValidationProblemDetails))]
         [HttpPost]
+        [Authorize(Roles = "Owner, Tennant, Administrator")]
         [Route("Reservations/{reservationId}/[controller]")]
         public async Task<ActionResult<ReviewDTO>> CreateReview(int placeId, int reservationId, [Validate] CreateReviewDTO createReviewDto)
         {
@@ -115,7 +117,8 @@ namespace RentalManagement.Controllers
                 ReservationId = reservationId,
                 Reservation = reservation,
                 Rating = createReviewDto.Rating,
-                Comment = createReviewDto.Comment
+                Comment = createReviewDto.Comment,
+                UserId = "FIXME" // FIXME
             };
 
             var existingReview = await _context.Reviews
@@ -141,6 +144,7 @@ namespace RentalManagement.Controllers
         [SwaggerResponse(StatusCodes.Status400BadRequest, "The Review is invalid.", typeof(ValidationProblemDetails))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "The Review was not found.", typeof(ValidationProblemDetails))]
         [HttpPut]
+        [Authorize(Roles = "Owner, Tennant, Administrator")]
         [Route("Reservations/{reservationId}/[controller]/{reviewId}")]
         public async Task<ActionResult<ReviewDTO>> UpdateReview(int placeId, int reservationId, int reviewId, [Validate] UpdateReviewDTO updateReviewDto)
         {
@@ -185,6 +189,7 @@ namespace RentalManagement.Controllers
         [SwaggerResponse(StatusCodes.Status400BadRequest, "The Review does not belong to the specified reservation.", typeof(ValidationProblemDetails))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "The Review was not found.", typeof(ValidationProblemDetails))]
         [HttpDelete]
+        [Authorize(Roles = "Owner, Tennant, Administrator")]
         [Route("Reservations/{reservationId}/[controller]/{reviewId}")]
         public async Task<ActionResult> DeleteReview(int placeId, int reservationId, int reviewId)
         {
