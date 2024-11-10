@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: postgres:16.4
+    environment:
+      - POSTGRES_PASSWORD=postgrespw
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  rentalmanagement:
+    build:
+      context: ./RentalManagement
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__RentalManagementContext=Host=postgres;Port=5432;Database=rental_management;Username=postgres;Password=postgrespw
+
+volumes:
+  postgres_data:

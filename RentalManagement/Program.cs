@@ -93,14 +93,6 @@ namespace RentalManagement
 
             var app = builder.Build();
 
-            // Seed roles
-            using (var scope = app.Services.CreateScope())
-            {
-                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                var authSeeder = scope.ServiceProvider.GetRequiredService<AuthSeeder>();
-
-                Task.Run(async () => await authSeeder.SeedRoles(scope.ServiceProvider)).GetAwaiter().GetResult();
-            }
 
             // Check database connection
             using (var scope = app.Services.CreateScope())
@@ -116,7 +108,33 @@ namespace RentalManagement
                 catch (Exception ex)
                 {
                     app.Logger.LogError(ex, "Database connection failed");
+                    throw;
                 }
+            }
+
+            // Check and create database if it doesn't exist
+            using (var scope = app.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                try
+                {
+                    // Ensure the database is created
+                    dbContext.Database.EnsureCreated();
+                    app.Logger.LogInformation("Database checked and created if it didn't exist");
+                }
+                catch (Exception ex)
+                {
+                    app.Logger.LogError(ex, "Database creation/check failed");
+                }
+            }
+
+            // Seed roles
+            using (var scope = app.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var authSeeder = scope.ServiceProvider.GetRequiredService<AuthSeeder>();
+
+                Task.Run(async () => await authSeeder.SeedRoles(scope.ServiceProvider)).GetAwaiter().GetResult();
             }
 
             // Configure the HTTP request pipeline.
