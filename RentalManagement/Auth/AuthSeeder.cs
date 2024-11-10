@@ -6,21 +6,26 @@ public class AuthSeeder
 {
     private readonly UserManager<User> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly IConfiguration _configuration;
 
-    public AuthSeeder(UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
+    public AuthSeeder(
+        UserManager<User> userManager,
+        RoleManager<IdentityRole> roleManager,
+        IConfiguration configuration)
     {
         _userManager = userManager;
         _roleManager = roleManager;
+        _configuration = configuration;
     }
     public async Task SeedRoles(IServiceProvider serviceProvider)
     {
         await AddDefaultRolesAsync();
         await AddAdminUserAsync();
 
-        var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-        var roles = new[] { UserRoles.Tenant, UserRoles.Owner, UserRoles.Admin };
+        RoleManager<IdentityRole> roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        string[] roles = new[] { UserRoles.Tenant, UserRoles.Owner, UserRoles.Admin };
 
-        foreach (var role in roles)
+        foreach (string role in roles)
         {
             if (!await roleManager.RoleExistsAsync(role))
             {
@@ -31,17 +36,17 @@ public class AuthSeeder
 
     private async Task AddAdminUserAsync()
     {
-        var newAdminUser = new User()
+        User newAdminUser = new User()
         {
-            UserName = "admin",
-            Email = "admin@admin.com",
+            UserName = _configuration["AdminSettings:AdminUserName"]!,
+            Email = _configuration["AdminSettings:AdminEmail"]!,
         };
 
-        var existingAdminUser = await _userManager.FindByNameAsync(newAdminUser.UserName);
+        User? existingAdminUser = await _userManager.FindByNameAsync(newAdminUser.UserName);
         if (existingAdminUser == null)
         {
-            // TODO: Get password from configuration
-            var createAdminUserResult = await _userManager.CreateAsync(newAdminUser, "ChangeMePassword123!");
+            string adminPassword = _configuration["AdminSettings:AdminPassword"]!;
+            IdentityResult createAdminUserResult = await _userManager.CreateAsync(newAdminUser, adminPassword);
             if (createAdminUserResult.Succeeded)
             {
                 await _userManager.AddToRolesAsync(newAdminUser, UserRoles.All);

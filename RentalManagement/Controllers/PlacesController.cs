@@ -74,6 +74,7 @@ namespace RentalManagement.Controllers
         /// </summary>
         /// <param name="createPlaceDto">The place to create</param>
         [SwaggerResponse(StatusCodes.Status201Created, "The place was created.", typeof(PlaceDTO))]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "You are not authorized to create a place.", typeof(ValidationProblemDetails))]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "The place is invalid.", typeof(ValidationProblemDetails))]
         [HttpPost]
         [Authorize(Roles = UserRoles.Owner)]
@@ -117,6 +118,7 @@ namespace RentalManagement.Controllers
         /// <param name="updatePlaceDto">Updated information of the place</param>
         [SwaggerResponse(StatusCodes.Status200OK, "The place was updated.", typeof(PlaceDTO))]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "The place is invalid.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(StatusCodes.Status403Forbidden, "You are not allowed to update this place.", typeof(ValidationProblemDetails))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "The place was not found.", typeof(ValidationProblemDetails))]
         [HttpPut]
         [Authorize(Roles = UserRoles.Owner)]
@@ -126,14 +128,13 @@ namespace RentalManagement.Controllers
             var place = await _context.Places.FirstOrDefaultAsync(p => p.Id == placeId);
 
             if (place is null)
-                return NotFound();
+                return NotFound("Place not found.");
 
             if (!HttpContext.User.IsInRole(UserRoles.Admin) &&
                 HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub) != place.UserId)
             {
-                return Forbid();
+                return Forbid("You are not allowed to update this place.");
             }
-
 
             place.RoomsCount = updatePlaceDto.RoomsCount;
             place.Size = updatePlaceDto.Size;
@@ -144,7 +145,6 @@ namespace RentalManagement.Controllers
             _context.Places.Update(place);
             await _context.SaveChangesAsync();
 
-
             return new PlaceDTO(place.Id, place.RoomsCount, place.Size, place.Address, place.Description, place.Price);
         }
 
@@ -153,9 +153,10 @@ namespace RentalManagement.Controllers
         /// </summary>
         /// <param name="placeId">Place to delete</param>
         [SwaggerResponse(StatusCodes.Status204NoContent, "The place was deleted.")]
+        [SwaggerResponse(StatusCodes.Status403Forbidden, "You are not allowed to delete this place.", typeof(ValidationProblemDetails))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "The place was not found.", typeof(ValidationProblemDetails))]
         [HttpDelete]
-        [Authorize(Roles = "Owner, Administrator")]
+        [Authorize(Roles = UserRoles.Owner)]
         [Route("{placeId}")]
         public async Task<ActionResult> DeletePlace(int placeId)
         {
@@ -163,7 +164,13 @@ namespace RentalManagement.Controllers
 
             if (place == null)
             {
-                return NotFound();
+                return NotFound("Place not found.");
+            }
+
+            if (!HttpContext.User.IsInRole(UserRoles.Admin) &&
+                HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub) != place.UserId)
+            {
+                return Forbid("You are not allowed to delete this place.");
             }
 
             _context.Places.Remove(place);

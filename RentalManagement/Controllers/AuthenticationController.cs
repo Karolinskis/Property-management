@@ -14,10 +14,14 @@ namespace RentalManagement.Controllers
     public class AuthenticationController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IConfiguration _configuration;
+        private readonly IWebHostEnvironment _environment;
 
-        public AuthenticationController(AppDbContext context)
+        public AuthenticationController(AppDbContext context, IConfiguration configuration, IWebHostEnvironment environment)
         {
             _context = context;
+            _configuration = configuration;
+            _environment = environment;
         }
 
         [HttpPost]
@@ -69,7 +73,7 @@ namespace RentalManagement.Controllers
             var roles = await userManager.GetRolesAsync(user);
 
             var sessionId = Guid.NewGuid();
-            var expiresAt = DateTime.UtcNow.AddDays(3); // TODO: Add time to config
+            var expiresAt = DateTime.UtcNow.AddDays(_configuration.GetValue<int>("Jwt:AccessTokenExpirationDays"));
             var accessToken = jwtTokenService.CreateAccessToken(user.UserName, user.Id, roles);
             var refreshToken = jwtTokenService.CreateRefreshToken(sessionId, user.Id, expiresAt);
 
@@ -80,8 +84,7 @@ namespace RentalManagement.Controllers
                 HttpOnly = true,
                 SameSite = SameSiteMode.Lax,
                 Expires = expiresAt,
-                // TODO: When in production, set to true
-                //Secure = false 
+                Secure = _environment.IsProduction()
             };
 
             HttpContext.Response.Cookies.Append("RefreshToken", refreshToken, cookieOptions);
@@ -127,8 +130,7 @@ namespace RentalManagement.Controllers
 
             var roles = await userManager.GetRolesAsync(user);
 
-            // TODO: Add to config
-            var expiresAt = DateTime.UtcNow.AddDays(3);
+            var expiresAt = DateTime.UtcNow.AddDays(_configuration.GetValue<int>("Jwt:AccessTokenExpirationDays"));
             var accessToken = jwtTokenService.CreateAccessToken(user.UserName, user.Id, roles);
             var newRefreshToken = jwtTokenService.CreateRefreshToken(sessionIdAsGuid, user.Id, expiresAt);
 
@@ -137,7 +139,7 @@ namespace RentalManagement.Controllers
                 HttpOnly = true,
                 SameSite = SameSiteMode.Lax,
                 Expires = expiresAt,
-                //Secure = false TODO: When in production, set to true
+                Secure = _environment.IsProduction()
             };
 
             HttpContext.Response.Cookies.Append("RefreshToken", newRefreshToken, cookieOptions);

@@ -1,3 +1,5 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -24,8 +26,8 @@ namespace RentalManagement.Controllers
         /// Gets all Reservations for a specific Place
         /// </summary>
         /// <param name="placeId">ID of the place to get reservations from</param>
-        [SwaggerResponse(200, "The Reservations were found.", typeof(IEnumerable<ReservationDTO>))]
-        [SwaggerResponse(404, "The Place was not found.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(StatusCodes.Status200OK, "The Reservations were found.", typeof(IEnumerable<ReservationDTO>))]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "The Place was not found.", typeof(ValidationProblemDetails))]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ReservationDTO>>> GetReservations(int placeId)
         {
@@ -59,8 +61,8 @@ namespace RentalManagement.Controllers
         /// </summary>
         /// <param name="placeId">ID of the place to get reservation from</param>
         /// <param name="reservationId">ID of the reservation</param>
-        [SwaggerResponse(200, "The Reservation was found.", typeof(ReservationDTO))]
-        [SwaggerResponse(404, "The Place was not found.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(StatusCodes.Status200OK, "The Reservation was found.", typeof(ReservationDTO))]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "The Place or Reservation was not found.", typeof(ValidationProblemDetails))]
         [HttpGet]
         [Route("{reservationId}")]
         public async Task<ActionResult<ReservationDTO>> GetReservation(int placeId, int reservationId)
@@ -94,11 +96,12 @@ namespace RentalManagement.Controllers
         /// </summary>
         /// <param name="placeId">ID of the place to create reservation on</param>
         /// <param name="createReservationDto">Reservation information</param>
-        [SwaggerResponse(201, "The Reservation was created.", typeof(ReservationDTO))]
-        [SwaggerResponse(400, "The Reservation is invalid.", typeof(ValidationProblemDetails))]
-        [SwaggerResponse(409, "The reservation dates overlap with an existing confirmed reservation.", typeof(ValidationProblemDetails))]
-        [SwaggerResponse(404, "The Place was not found.", typeof(ValidationProblemDetails))]
-        [Authorize(Roles = "Owner, Tennant, Administrator")]
+        [SwaggerResponse(StatusCodes.Status201Created, "The Reservation was created.", typeof(ReservationDTO))]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "The Reservation is invalid.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "You are not authorized to create a reservation.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "The Place was not found.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(StatusCodes.Status409Conflict, "The reservation dates overlap with an existing confirmed reservation.", typeof(ValidationProblemDetails))]
+        [Authorize(Roles = UserRoles.Owner + "," + UserRoles.Tenant)]
         [HttpPost]
         public async Task<ActionResult<ReservationDTO>> CreateReservation(int placeId, [Validate] CreateReservationDTO createReservationDto)
         {
@@ -125,7 +128,7 @@ namespace RentalManagement.Controllers
                 EndDate = createReservationDto.EndDate,
                 Status = Status.Pending,
                 Price = reservationPrice != 0 ? reservationPrice : createReservationDto.Price,
-                UserId = "FIXME" // FIXME
+                UserId = HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub)
             };
 
             await _context.Reservations.AddAsync(reservation);
@@ -151,12 +154,14 @@ namespace RentalManagement.Controllers
         /// <param name="placeId">ID of the place that the reservation is a part of</param>
         /// <param name="reservationId">ID of the reservation to update</param>
         /// <param name="updateReservationDto">Updated reservation information</param>
-        [SwaggerResponse(200, "The Reservation was updated.", typeof(ReservationDTO))]
-        [SwaggerResponse(400, "The updated Reservation is invalid.", typeof(ValidationProblemDetails))]
-        [SwaggerResponse(404, "The Reservation and/or Place was not found.", typeof(ValidationProblemDetails))]
-        [SwaggerResponse(422, "The updated Reservation is invalid", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(StatusCodes.Status200OK, "The Reservation was updated.", typeof(ReservationDTO))]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "The updated Reservation is invalid.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "You are not authorized to update this reservation.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(StatusCodes.Status403Forbidden, "You are not allowed to update this reservation.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "The Reservation and/or Place was not found.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(StatusCodes.Status422UnprocessableEntity, "The updated Reservation is invalid", typeof(ValidationProblemDetails))]
+        [Authorize(Roles = UserRoles.Owner + "," + UserRoles.Tenant)]
         [HttpPut]
-        [Authorize(Roles = "Owner, Tennant, Administrator")]
         [Route("{reservationId}")]
         public async Task<ActionResult<ReservationDTO>> UpdateReservation(int placeId, int reservationId, [Validate] UpdateReservationDTO updateReservationDto)
         {
@@ -172,6 +177,13 @@ namespace RentalManagement.Controllers
 
             if (Utils.HasConflictingReservations(_context, existingReservation.Place.Id, updateReservationDto.StartDate.ToUniversalTime(), updateReservationDto.EndDate.ToUniversalTime()))
                 return Conflict("The reservation dates overlap with an existing confirmed reservation.");
+
+            if (!HttpContext.User.IsInRole(UserRoles.Admin) &&
+                HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub) != existingReservation.UserId &&
+                HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub) != place.UserId)
+            {
+                return Forbid("You are not allowed to update this reservation.");
+            }
 
             existingReservation.StartDate = updateReservationDto.StartDate;
             existingReservation.EndDate = updateReservationDto.EndDate;
@@ -201,11 +213,13 @@ namespace RentalManagement.Controllers
         /// </summary>
         /// <param name="placeId">ID of the place that the reservation is a part of</param>
         /// <param name="reservationId">ID of the reservation</param>
-        [SwaggerResponse(204, "The Reservation was deleted.")]
-        [SwaggerResponse(400, "The Reservation does not belong to the specified place.", typeof(ValidationProblemDetails))]
-        [SwaggerResponse(404, "The Reservation and/or the place was not found.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(StatusCodes.Status204NoContent, "The Reservation was deleted.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "The Reservation does not belong to the specified place.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "You are not authorized to delete this reservation.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(StatusCodes.Status403Forbidden, "You are not allowed to delete this reservation.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "The Reservation and/or the place was not found.", typeof(ValidationProblemDetails))]
+        [Authorize(Roles = UserRoles.Owner + "," + UserRoles.Tenant)]
         [HttpDelete]
-        [Authorize(Roles = "Owner, Tennant, Administrator")]
         [Route("{reservationId}")]
         public async Task<ActionResult> DeleteReservation(int placeId, int reservationId)
         {
@@ -222,6 +236,13 @@ namespace RentalManagement.Controllers
 
             if (reservation.Place.Id != placeId)
                 return BadRequest("Reservation does not belong to the specified place.");
+
+            if (!HttpContext.User.IsInRole(UserRoles.Admin) &&
+                HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub) != reservation.UserId &&
+                HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub) != place.UserId)
+            {
+                return Forbid("You are not allowed to delete this reservation.");
+            }
 
             _context.Reservations.Remove(reservation);
             await _context.SaveChangesAsync();

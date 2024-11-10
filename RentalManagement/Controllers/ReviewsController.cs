@@ -1,3 +1,5 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -95,10 +97,12 @@ namespace RentalManagement.Controllers
         /// <param name="reservationId">ID of the reservation</param>
         /// <param name="createReviewDto">Review details</param>
         [SwaggerResponse(StatusCodes.Status201Created, "The Review was created.", typeof(ReviewDTO))]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "The Review is invalid.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "You are not authorized to create a review.", typeof(ValidationProblemDetails))]
         [SwaggerResponse(StatusCodes.Status409Conflict, "A review for this reservation already exists.", typeof(ValidationProblemDetails))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "The Place or Reservation was not found.", typeof(ValidationProblemDetails))]
         [HttpPost]
-        [Authorize(Roles = "Owner, Tennant, Administrator")]
+        [Authorize(Roles = UserRoles.Tenant)]
         [Route("Reservations/{reservationId}/[controller]")]
         public async Task<ActionResult<ReviewDTO>> CreateReview(int placeId, int reservationId, [Validate] CreateReviewDTO createReviewDto)
         {
@@ -112,13 +116,18 @@ namespace RentalManagement.Controllers
             if (reservation == null)
                 return NotFound("Reservation not found or does not belong to the specified place.");
 
+            if (!HttpContext.User.IsInRole(UserRoles.Admin) &&
+                (reservation.UserId != User.FindFirstValue(JwtRegisteredClaimNames.Sub) ||
+                reservation.Place.UserId == User.FindFirstValue(JwtRegisteredClaimNames.Sub)))
+                return Forbid("You are not authorized to create a review for this reservation.");
+
             var review = new Review
             {
                 ReservationId = reservationId,
                 Reservation = reservation,
                 Rating = createReviewDto.Rating,
                 Comment = createReviewDto.Comment,
-                UserId = "FIXME" // FIXME
+                UserId = HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub)
             };
 
             var existingReview = await _context.Reviews
@@ -142,9 +151,11 @@ namespace RentalManagement.Controllers
         /// <param name="updateReviewDto">Updated review information</param>
         [SwaggerResponse(StatusCodes.Status200OK, "The Review was updated.", typeof(ReviewDTO))]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "The Review is invalid.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "You are not authorized to update this review.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(StatusCodes.Status403Forbidden, "You are not allowed to update this review.", typeof(ValidationProblemDetails))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "The Review was not found.", typeof(ValidationProblemDetails))]
         [HttpPut]
-        [Authorize(Roles = "Owner, Tennant, Administrator")]
+        [Authorize(Roles = UserRoles.Tenant)]
         [Route("Reservations/{reservationId}/[controller]/{reviewId}")]
         public async Task<ActionResult<ReviewDTO>> UpdateReview(int placeId, int reservationId, int reviewId, [Validate] UpdateReviewDTO updateReviewDto)
         {
@@ -164,6 +175,11 @@ namespace RentalManagement.Controllers
             {
                 return NotFound("Review not found.");
             }
+
+            if (!HttpContext.User.IsInRole(UserRoles.Admin) &&
+                (reservation.UserId != User.FindFirstValue(JwtRegisteredClaimNames.Sub) ||
+                reservation.Place.UserId == User.FindFirstValue(JwtRegisteredClaimNames.Sub)))
+                return Forbid("You are not authorized to update this review.");
 
             review.Rating = updateReviewDto.Rating;
             review.Comment = updateReviewDto.Comment;
@@ -187,9 +203,11 @@ namespace RentalManagement.Controllers
         /// <param name="reviewId">ID of the review</param>
         [SwaggerResponse(StatusCodes.Status204NoContent, "The Review was deleted.")]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "The Review does not belong to the specified reservation.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "You are not authorized to delete this review.", typeof(ValidationProblemDetails))]
+        [SwaggerResponse(StatusCodes.Status403Forbidden, "You are not allowed to delete this review.", typeof(ValidationProblemDetails))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "The Review was not found.", typeof(ValidationProblemDetails))]
         [HttpDelete]
-        [Authorize(Roles = "Owner, Tennant, Administrator")]
+        [Authorize(Roles = UserRoles.Tenant)]
         [Route("Reservations/{reservationId}/[controller]/{reviewId}")]
         public async Task<ActionResult> DeleteReview(int placeId, int reservationId, int reviewId)
         {
@@ -209,6 +227,11 @@ namespace RentalManagement.Controllers
 
             if (review.ReservationId != reservationId)
                 return BadRequest("Review does not belong to the specified reservation.");
+
+            if (!HttpContext.User.IsInRole(UserRoles.Admin) &&
+                (reservation.UserId != User.FindFirstValue(JwtRegisteredClaimNames.Sub) ||
+                reservation.Place.UserId == User.FindFirstValue(JwtRegisteredClaimNames.Sub)))
+                return Forbid("You are not authorized to delete this review.");
 
             _context.Reviews.Remove(review);
             await _context.SaveChangesAsync();
