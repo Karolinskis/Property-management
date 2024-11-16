@@ -133,7 +133,7 @@ namespace RentalManagement.Controllers
             if (!HttpContext.User.IsInRole(UserRoles.Admin) &&
                 HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub) != place.UserId)
             {
-                return Forbid("You are not allowed to update this place.");
+                return Forbid();
             }
 
             place.RoomsCount = updatePlaceDto.RoomsCount;
@@ -170,7 +170,7 @@ namespace RentalManagement.Controllers
             if (!HttpContext.User.IsInRole(UserRoles.Admin) &&
                 HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub) != place.UserId)
             {
-                return Forbid("You are not allowed to delete this place.");
+                return Forbid();
             }
 
             _context.Places.Remove(place);

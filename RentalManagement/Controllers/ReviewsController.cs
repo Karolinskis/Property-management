@@ -119,7 +119,7 @@ namespace RentalManagement.Controllers
             if (!HttpContext.User.IsInRole(UserRoles.Admin) &&
                 (reservation.UserId != User.FindFirstValue(JwtRegisteredClaimNames.Sub) ||
                 reservation.Place.UserId == User.FindFirstValue(JwtRegisteredClaimNames.Sub)))
-                return Forbid("You are not authorized to create a review for this reservation.");
+                return Forbid();
 
             var review = new Review
             {
@@ -179,7 +179,7 @@ namespace RentalManagement.Controllers
             if (!HttpContext.User.IsInRole(UserRoles.Admin) &&
                 (reservation.UserId != User.FindFirstValue(JwtRegisteredClaimNames.Sub) ||
                 reservation.Place.UserId == User.FindFirstValue(JwtRegisteredClaimNames.Sub)))
-                return Forbid("You are not authorized to update this review.");
+                return Forbid();
 
             review.Rating = updateReviewDto.Rating;
             review.Comment = updateReviewDto.Comment;
@@ -231,7 +231,7 @@ namespace RentalManagement.Controllers
             if (!HttpContext.User.IsInRole(UserRoles.Admin) &&
                 (reservation.UserId != User.FindFirstValue(JwtRegisteredClaimNames.Sub) ||
                 reservation.Place.UserId == User.FindFirstValue(JwtRegisteredClaimNames.Sub)))
-                return Forbid("You are not authorized to delete this review.");
+                return Forbid();
 
             _context.Reviews.Remove(review);
             await _context.SaveChangesAsync();

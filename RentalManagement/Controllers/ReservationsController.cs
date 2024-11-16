@@ -182,7 +182,7 @@ namespace RentalManagement.Controllers
                 HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub) != existingReservation.UserId &&
                 HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub) != place.UserId)
             {
-                return Forbid("You are not allowed to update this reservation.");
+                return Forbid();
             }
 
             existingReservation.StartDate = updateReservationDto.StartDate;
@@ -241,7 +241,7 @@ namespace RentalManagement.Controllers
                 HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub) != reservation.UserId &&
                 HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub) != place.UserId)
             {
-                return Forbid("You are not allowed to delete this reservation.");
+                return Forbid();
             }
 
             _context.Reservations.Remove(reservation);
