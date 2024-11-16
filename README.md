@@ -70,26 +70,52 @@ Sistemos paskirtis:
 
 ```mermaid
 classDiagram
+flowchart-elk
 direction LR
-Place "1" --> "0..*" Reservation
-Reservation "1" --> "0..1" Review
 class Place {
     int roomsNum
     int size
     int floor
     string adress
     float price
+    string userId
 }
 class Reservation {
     dateTime date
     status status
     dateTime start
     dateTime end
+    string userId
 }
+Place "1" --> "0..*" Reservation
 class Review {
     int stars
     string description
+    string userId
 }
+Reservation "1" --> "0..1" Review
+class Session {
+   int sessionId
+   string device
+   string lastRefreshToken
+   dateTime initiatedAt
+   dateTime expiresAt
+   bool isRevoked
+   string userId
+}
+class User {
+   string userId
+   string email
+}
+Session "1" --> "1" User
+User "1" --> "0..*" Place
+User "1" --> "0..*" Reservation
+User "1" --> "0..*" Review
+class UserRole {
+   string userRoleId
+   string name
+}
+User "1" --> "0..*" UserRole
 class status {
     <<enumeration>>
     waiting
