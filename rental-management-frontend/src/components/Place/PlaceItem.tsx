@@ -62,15 +62,15 @@ const PlaceItem: React.FC<PlaceItemProps> = ({
 
   return (
     <div className="w-full max-w-sm bg-white border border-gray-200 rounded-lg shadow">
-      <a href="#">
+      <a href={link}>
         <img
           className="p-8 rounded-t-lg"
           src="https://via.placeholder.com/600x400"
-          alt="product image"
+          alt="place"
         />
       </a>
       <div className="px-5 pb-5">
-        <a href="#">
+        <a href={link}>
           <h5 className="text-xl font-semibold tracking-tight text-gray-900">
             {title}
           </h5>

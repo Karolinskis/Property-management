@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import "./App.css";
 import Navbar from "./components/Navbar";
-import PlaceItem from "./components/Place/PlaceItem";
-import axios from "axios";
 import PlaceDetails from "./components/Place/PlaceDetails";
 import Home from "./pages/Home";
 import MyPlaces from "./pages/MyPlaces";

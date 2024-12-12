@@ -87,7 +87,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
         {error && <p className="text-red-600 mb-4">{error}</p>}
         {success && <p className="text-green-600 mb-4">{success}</p>}
         {!success && (
-          <>
+          <div className="flex flex-col items-center">
             <div className="mb-4">
               <label className="block text-gray-700 mb-2">
                 Select Date Range
@@ -120,7 +120,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
                 Reserve
               </button>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axiosInstance from "../utils/axiosInstance";
-import { Place, Review, Reservation, User } from "../types";
+import { Place, Review, Reservation } from "../types";
 import PlaceItem from "../components/Place/PlaceItem";
 import ReservationItem from "../components/Reservation/ReservationItem";
 import ReservationModal from "../components/Reservation/ReservationModal";
@@ -12,7 +12,6 @@ const MyPlaces: React.FC = () => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [selectedReservation, setSelectedReservation] =
     useState<Reservation | null>(null);
-  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { isAuthenticated } = useAuth();
@@ -103,7 +102,9 @@ const MyPlaces: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">My Places and Reservations</h1>
+      <h1 className="text-2xl font-bold mb-4 text-center">
+        My Places and Reservations
+      </h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <h2 className="text-xl font-semibold mb-4">My Places</h2>
