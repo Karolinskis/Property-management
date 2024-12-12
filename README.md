@@ -335,7 +335,3 @@ Buvo realizuotos vietų, rezervacijų ir atsiliepimų CRUD operacijos. Taip pat 
 - UpdateReviewDTO: Aprašo atsiliepimo atnaujinimo duomenis.
 - UserDTO: Aprašo vartotojo duomenis.
 - ValidationProblemDetails: Aprašo validacijos klaidų duomenis.
-
-```
-
-```
