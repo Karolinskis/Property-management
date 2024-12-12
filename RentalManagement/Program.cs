@@ -93,7 +93,7 @@ namespace RentalManagement
                                 (
                                     "http://localhost:3000",
                                     "https://property-management-green.vercel.app",
-                                    "propertymanagement.paulavicius.me"
+                                    "https://propertymanagement.paulavicius.me"
                                 )
                                 .AllowAnyMethod()
                                 .AllowAnyHeader()
