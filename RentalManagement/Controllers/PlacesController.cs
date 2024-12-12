@@ -40,7 +40,8 @@ namespace RentalManagement.Controllers
                     p.Size,
                     p.Address,
                     p.Description,
-                    p.Price
+                    p.Price,
+                    p.UserId
                 );
             });
 
@@ -64,7 +65,15 @@ namespace RentalManagement.Controllers
                 return NotFound();
             }
 
-            var dto = new PlaceDTO(place.Id, place.RoomsCount, place.Size, place.Address, place.Description, place.Price);
+            var dto = new PlaceDTO(
+                place.Id,
+                place.RoomsCount,
+                place.Size,
+                place.Address,
+                place.Description,
+                place.Price,
+                place.UserId
+            );
 
             return dto;
         }
@@ -105,7 +114,8 @@ namespace RentalManagement.Controllers
                 place.Size,
                 place.Address,
                 place.Description,
-                place.Price
+                place.Price,
+                place.UserId ?? throw new ArgumentNullException(nameof(place.UserId), "UserId cannot be null")
             );
 
             return CreatedAtAction(nameof(GetPlace), new { placeId = place.Id }, placeDto);
@@ -145,7 +155,15 @@ namespace RentalManagement.Controllers
             _context.Places.Update(place);
             await _context.SaveChangesAsync();
 
-            return new PlaceDTO(place.Id, place.RoomsCount, place.Size, place.Address, place.Description, place.Price);
+            return new PlaceDTO(
+                place.Id,
+                place.RoomsCount,
+                place.Size,
+                place.Address,
+                place.Description,
+                place.Price,
+                place.UserId
+            );
         }
 
         /// <summary>

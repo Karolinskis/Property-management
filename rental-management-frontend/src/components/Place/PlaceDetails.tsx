@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { Review } from "../../types";
 import axios from "axios";
+import { useAuth } from "../../utils/AuthContext";
 
 import ReservationModal from "../ReservationModal";
+import { jwtDecode } from "jwt-decode";
 
 interface PlaceDetailsProps {
   id: number;
@@ -12,6 +14,7 @@ interface PlaceDetailsProps {
   address: string;
   description: string;
   price: number;
+  userId: string;
 }
 
 const PlaceDetails: React.FC = () => {
@@ -21,6 +24,8 @@ const PlaceDetails: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { isAuthenticated, roles } = useAuth();
+  const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
     const fetchPlace = async () => {
@@ -28,7 +33,15 @@ const PlaceDetails: React.FC = () => {
         const response = await axios.get(
           `${process.env.REACT_APP_API_URL}/Places/${id}`
         );
+        console.log("Place details", response.data);
         setPlace(response.data);
+
+        // Check if the loggen-in user is the owner of the place
+        const token = localStorage.getItem("accessToken");
+        if (token) {
+          const decodedToken = jwtDecode<{ sub: string }>(token);
+          setIsOwner(decodedToken.sub === response.data.userId);
+        }
       } catch (error) {
         console.error("Place details", error);
         if (axios.isAxiosError(error)) {
@@ -49,10 +62,9 @@ const PlaceDetails: React.FC = () => {
         const response = await axios.get(
           `${process.env.REACT_APP_API_URL}/Places/${id}/Reviews`
         );
-        console.log(response.data);
         setReviews(response.data);
+        console.log("Reviews", response.data);
       } catch (error) {
-        console.error("Reviews", error);
         if (axios.isAxiosError(error)) {
           setError(
             "An error occurred while fetching the reviews. " + error.message
@@ -75,6 +87,7 @@ const PlaceDetails: React.FC = () => {
     return <div>Oh no! {error}</div>;
   }
 
+  const canEdit = isAuthenticated && (isOwner || roles.includes("Admin"));
   const pricePerSquareMeter = place ? (place.price / place.size).toFixed(2) : 0;
   const averageRating =
     reviews.length > 0
@@ -116,6 +129,10 @@ const PlaceDetails: React.FC = () => {
                   </span>
                 </div>
               </div>
+              <div className="text-sm text-gray-600 mt-4 text-start">
+                <b>Description:</b>
+                <p style={{ whiteSpace: "pre-wrap" }}>{place.description}</p>
+              </div>
             </div>
 
             {/* Details Section */}
@@ -142,12 +159,21 @@ const PlaceDetails: React.FC = () => {
 
               {/* Action Buttons */}
               <div className="flex gap-4 mt-4">
-                <button
-                  className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-                  onClick={() => setIsModalOpen(true)}
-                >
-                  Reserve
-                </button>
+                {canEdit && (
+                  <Link to={`/places/${place.id}/edit`}>
+                    <button className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                      Edit Place
+                    </button>
+                  </Link>
+                )}
+                {isAuthenticated && !isOwner && (
+                  <button
+                    className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+                    onClick={() => setIsModalOpen(true)}
+                  >
+                    Reserve
+                  </button>
+                )}
               </div>
             </div>
 

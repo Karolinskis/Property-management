@@ -6,6 +6,20 @@ export interface Place {
   description?: string;
   price: number;
   averageRating?: number;
+  userId: string;
+}
+
+export interface Reservation {
+  id: number;
+  placeId: number;
+  createdAt: Date;
+  startDate: Date;
+  endDate: Date;
+  status: string;
+  price: number;
+  place: Place;
+  user: User;
+  review?: Review | null;
 }
 
 export interface Review {

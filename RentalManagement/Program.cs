@@ -33,8 +33,11 @@ namespace RentalManagement
 
             builder.Services.AddIdentity<User, IdentityRole>(options =>
             {
+                options.Password.RequireDigit = false;
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequireUppercase = false;
+                options.Password.RequireLowercase = false;
+                options.Password.RequiredLength = 1;
             })
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
@@ -74,6 +77,19 @@ namespace RentalManagement
             builder.Services.AddTransient<SessionService>();
             builder.Services.AddScoped<AuthSeeder>();
 
+            // Configure CORS policy
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowFrontendOrigin",
+                    builder =>
+                    {
+                        builder.WithOrigins("http://localhost:3000")
+                            .AllowAnyMethod()
+                            .AllowAnyHeader()
+                            .AllowCredentials();
+                    });
+            });
+
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(options =>
@@ -89,17 +105,6 @@ namespace RentalManagement
                 options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 
                 options.EnableAnnotations(); // FIXME: Might not be needed. Needed for Swashbuckle Annotations
-            });
-
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("AllowAllOrigins",
-                    builder =>
-                    {
-                        builder.AllowAnyOrigin()
-                            .AllowAnyMethod()
-                            .AllowAnyHeader();
-                    });
             });
 
             var app = builder.Build();
@@ -160,7 +165,7 @@ namespace RentalManagement
                 });
             }
 
-            app.UseCors("AllowAllOrigins");
+            app.UseCors("AllowFrontendOrigin");
 
             app.UseHttpsRedirection();
             app.UseResponseCaching();

@@ -17,7 +17,9 @@ public class PlaceDTO
     /// <example>100.00</example>
     public float Price { get; set; }
 
-    public PlaceDTO(int id, int roomsCount, int size, string address, string? description, float price)
+    public string UserId { get; set; }
+
+    public PlaceDTO(int id, int roomsCount, int size, string address, string? description, float price, string userId)
     {
         Id = id;
         RoomsCount = roomsCount;
@@ -25,5 +27,6 @@ public class PlaceDTO
         Address = address;
         Description = description;
         Price = price;
+        UserId = userId;
     }
 }

@@ -38,8 +38,8 @@ namespace RentalManagement.Controllers
                 return NotFound("Place not found.");
 
             var reviews = await _context.Reviews
-                                        .Where(r => _context.Reservations
-                                                            .Any(res => res.Place.Id == placeId))
+                                        .Include(r => r.Reservation)
+                                        .Where(r => r.Reservation.Place.Id == placeId)
                                         .ToListAsync();
 
             var reviewDtos = reviews.Select(r => new ReviewDTO(

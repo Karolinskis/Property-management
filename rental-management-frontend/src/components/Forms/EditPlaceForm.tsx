@@ -1,9 +1,11 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance";
-import axios from "axios";
+import { useAuth } from "../../utils/AuthContext";
 
-const CreatePlaceForm: React.FC = () => {
+const EditPlaceForm: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [roomsCount, setRoomsCount] = useState<number>(0);
   const [size, setSize] = useState<number>(0);
   const [address, setAddress] = useState<string>("");
@@ -11,45 +13,61 @@ const CreatePlaceForm: React.FC = () => {
   const [price, setPrice] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const { isAuthenticated, roles } = useAuth();
+
+  useEffect(() => {
+    const fetchPlace = async () => {
+      try {
+        const response = await axiosInstance.get(
+          `${process.env.REACT_APP_API_URL}/Places/${id}`
+        );
+        const place = response.data;
+        setRoomsCount(place.roomsCount);
+        setSize(place.size);
+        setAddress(place.address);
+        setDescription(place.description);
+        setPrice(place.price);
+      } catch (error) {
+        console.error("Fetch place", error);
+        setError("An error occurred while fetching the place details.");
+      }
+    };
+
+    fetchPlace();
+  }, [id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log("Creating place", {
-      roomsCount,
-      size,
-      address,
-      description,
-      price,
-    });
-
     try {
-      const response = await axiosInstance.post(
-        `${process.env.REACT_APP_API_URL}/Places`,
+      await axiosInstance.put(
+        `${process.env.REACT_APP_API_URL}/Places/${id}`,
         {
           roomsCount,
           size,
           address,
           description,
           price,
-        }
+        },
+        { withCredentials: true }
       );
-      setSuccess("Place created successfully.");
+      setSuccess("Place updated successfully.");
       setError(null);
-      navigate(`/places/${response.data.id}`);
+      navigate(`/places/${id}`);
     } catch (error) {
-      console.error("Create place", error);
-      if (axios.isAxiosError(error)) {
-        setError(
-          "An error occurred while creating the place. " + error.message
-        );
-      } else {
-        setError("An error occurred while creating the place.");
-      }
+      console.error("Update place", error);
+      setError("An error occurred while updating the place.");
       setSuccess(null);
     }
   };
+
+  if (
+    !isAuthenticated ||
+    !roles.includes("Owner") ||
+    !roles.includes("Admin")
+  ) {
+    return <div>You are not authorized to edit this place.</div>;
+  }
 
   return (
     <form
@@ -112,7 +130,7 @@ const CreatePlaceForm: React.FC = () => {
         type="submit"
         className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600"
       >
-        Create Place
+        Update Place
       </button>
       {error && <p className="mt-4 text-red-600">{error}</p>}
       {success && <p className="mt-4 text-green-600">{success}</p>}
@@ -120,4 +138,4 @@ const CreatePlaceForm: React.FC = () => {
   );
 };
 
-export default CreatePlaceForm;
+export default EditPlaceForm;

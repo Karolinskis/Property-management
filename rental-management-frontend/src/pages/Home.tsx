@@ -57,15 +57,17 @@ function Home() {
 
   return (
     <div className="container mx-auto p-4">
-      {places.map((place) => (
-        <PlaceItem
-          key={place.id}
-          title={place.address}
-          price={place.price}
-          averageRating={place.averageRating}
-          link={`/places/${place.id}`}
-        />
-      ))}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {places.map((place) => (
+          <PlaceItem
+            key={place.id}
+            title={place.address}
+            price={place.price}
+            averageRating={place.averageRating}
+            link={`/places/${place.id}`}
+          />
+        ))}
+      </div>
     </div>
   );
 }

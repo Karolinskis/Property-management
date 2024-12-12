@@ -1,11 +1,14 @@
-import React, { useState } from "react";
+import React, { act, useState } from "react";
 import axios from "axios";
+import axiosInstance from "../../utils/axiosInstance";
+import { useAuth } from "../../utils/AuthContext";
 
 const LoginForm: React.FC = () => {
   const [userName, setUserName] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,13 +19,20 @@ const LoginForm: React.FC = () => {
     });
 
     try {
-      const response = await axios.post(
+      const response = await axiosInstance.post(
         `${process.env.REACT_APP_API_URL}/Authentication/Login`,
         {
           userName,
           password,
-        }
+        },
+        { withCredentials: true }
       );
+
+      const { accessToken } = response.data;
+
+      // Use the login method from AuthContext to update the state
+      login(accessToken);
+
       setSuccess("User logged in successfully.");
       setError(null);
     } catch (error) {

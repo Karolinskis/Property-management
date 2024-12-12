@@ -1,11 +1,27 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../utils/AuthContext";
+import axiosInstance from "../utils/axiosInstance";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { roles, isAuthenticated, logout } = useAuth();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await axiosInstance.post(
+        "/Authentication/Logout",
+        {},
+        { withCredentials: true }
+      );
+      logout();
+    } catch (error) {
+      console.error("Logout error", error);
+    }
   };
 
   return (
@@ -20,18 +36,29 @@ const Navbar = () => {
           </span>
         </Link>
         <div className="flex md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
-          <Link
-            to="/register"
-            className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 text-center mr-2"
-          >
-            Register
-          </Link>
-          <Link
-            to="/login"
-            className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 text-center"
-          >
-            Login
-          </Link>
+          {isAuthenticated ? (
+            <button
+              onClick={handleLogout}
+              className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 text-center"
+            >
+              Logout
+            </button>
+          ) : (
+            <>
+              <Link
+                to="/register"
+                className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 text-center mr-2"
+              >
+                Register
+              </Link>
+              <Link
+                to="/login"
+                className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 text-center"
+              >
+                Login
+              </Link>
+            </>
+          )}
           <button
             data-collapse-toggle="navbar-sticky"
             type="button"
@@ -65,22 +92,36 @@ const Navbar = () => {
           id="navbar-sticky"
         >
           <ul className="flex flex-col p-4 md:p-0 mt-4 font-medium border border-gray-100 rounded-lg bg-gray-50 md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 md:bg-white">
-            <li>
-              <Link
-                to="/newPlace"
-                className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0"
-              >
-                Create a New Place
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/reservations"
-                className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0"
-              >
-                My reservations
-              </Link>
-            </li>
+            {roles.includes("Owner") && (
+              <>
+                <li>
+                  <Link
+                    to="/places/new"
+                    className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0"
+                  >
+                    Create a New Place
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/places/mine"
+                    className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0"
+                  >
+                    My Places and Reservations
+                  </Link>
+                </li>
+              </>
+            )}
+            {roles.includes("Tenant") && (
+              <li>
+                <Link
+                  to="/reservations/mine"
+                  className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0"
+                >
+                  My reservations
+                </Link>
+              </li>
+            )}
           </ul>
         </div>
       </div>
