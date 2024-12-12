@@ -38,15 +38,16 @@ namespace RentalManagement.Controllers
                 return NotFound("Place not found.");
 
             var reviews = await _context.Reviews
-                                        .Where(r => _context.Reservations
-                                                            .Any(res => res.Place.Id == placeId))
+                                        .Include(r => r.Reservation)
+                                        .Where(r => r.Reservation.Place.Id == placeId)
                                         .ToListAsync();
 
             var reviewDtos = reviews.Select(r => new ReviewDTO(
                 r.Id,
                 r.ReservationId,
                 r.Rating,
-                r.Comment
+                r.Comment,
+                user: _context.Users.Find(r.UserId)
             )).ToList();
 
             return Ok(reviewDtos);
@@ -84,7 +85,8 @@ namespace RentalManagement.Controllers
                 review.Id,
                 review.ReservationId,
                 review.Rating,
-                review.Comment
+                review.Comment,
+                user: _context.Users.Find(review.UserId)
             );
 
             return Ok(dto);
@@ -190,7 +192,8 @@ namespace RentalManagement.Controllers
                 review.Id,
                 review.ReservationId,
                 review.Rating,
-                review.Comment
+                review.Comment,
+                user: _context.Users.Find(review.UserId)
             );
 
         }

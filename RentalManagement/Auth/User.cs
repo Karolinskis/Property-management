@@ -32,3 +32,17 @@ public class SuccessfulLoginDTO
     /// <example>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJKb2huRG9lIiwianRpIjoi</example>
     public string AccessToken { get; set; }
 }
+
+public class UserDTO
+{
+    public string Id { get; set; }
+    public string UserName { get; set; }
+    public string Email { get; set; }
+
+    public UserDTO(string id, string userName, string email)
+    {
+        Id = id;
+        UserName = userName;
+        Email = email;
+    }
+}

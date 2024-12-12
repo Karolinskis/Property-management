@@ -25,6 +25,13 @@ namespace RentalManagement
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // Print out the configuration for debugging purposes
+            var logger = LoggerFactory.Create(config => config.AddConsole()).CreateLogger<Program>();
+            foreach (var item in builder.Configuration.AsEnumerable())
+            {
+                logger.LogInformation($"{item.Key}: {item.Value}");
+            }
+
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSql")));
 
@@ -33,8 +40,11 @@ namespace RentalManagement
 
             builder.Services.AddIdentity<User, IdentityRole>(options =>
             {
+                options.Password.RequireDigit = false;
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequireUppercase = false;
+                options.Password.RequireLowercase = false;
+                options.Password.RequiredLength = 1;
             })
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
@@ -73,6 +83,22 @@ namespace RentalManagement
             builder.Services.AddTransient<JwtTokenService>();
             builder.Services.AddTransient<SessionService>();
             builder.Services.AddScoped<AuthSeeder>();
+
+            // Configure CORS policy
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowMultipleOrigins",
+                    builder => builder
+                                .WithOrigins
+                                (
+                                    "http://localhost:3000",
+                                    "https://property-management-green.vercel.app",
+                                    "propertymanagement.paulavicius.me"
+                                )
+                                .AllowAnyMethod()
+                                .AllowAnyHeader()
+                                .AllowCredentials());
+            });
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -148,6 +174,8 @@ namespace RentalManagement
                     c.RoutePrefix = string.Empty;
                 });
             }
+
+            app.UseCors("AllowMultipleOrigins");
 
             app.UseHttpsRedirection();
             app.UseResponseCaching();

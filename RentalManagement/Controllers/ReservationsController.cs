@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using O9d.AspNet.FluentValidation;
+using RentalManagement.Auth;
 using RentalManagement.Contexts;
 using RentalManagement.Entities;
 using RentalManagement.Entities.DTOs;
@@ -37,11 +38,28 @@ namespace RentalManagement.Controllers
 
             var reservations = await _context.Reservations
                                     .Include(r => r.Place)
+                                    .Include(r => r.User)
                                     .Where(r => r.Place.Id == placeId)
                                     .ToListAsync();
 
             var dto = reservations.Select(r =>
             {
+                var placeDto = new PlaceDTO(
+                    r.Place.Id,
+                    r.Place.RoomsCount,
+                    r.Place.Size,
+                    r.Place.Address,
+                    r.Place.Description,
+                    r.Place.Price,
+                    r.Place.UserId
+                );
+
+                var userDto = new UserDTO(
+                    r.User.Id,
+                    r.User.UserName ?? string.Empty,
+                    r.User.Email ?? string.Empty
+                );
+
                 return new ReservationDTO(
                     r.Id,
                     r.Place.Id,
@@ -49,7 +67,9 @@ namespace RentalManagement.Controllers
                     r.StartDate,
                     r.EndDate,
                     r.Status.ToString(),
-                    r.Price
+                    r.Price,
+                    placeDto,
+                    userDto
                 );
             });
 
@@ -73,10 +93,27 @@ namespace RentalManagement.Controllers
 
             var reservation = await _context.Reservations
                                             .Include(r => r.Place)
+                                            .Include(r => r.User)
                                             .FirstOrDefaultAsync(r => r.Id == reservationId);
 
             if (reservation == null)
                 return NotFound("Reservation not found");
+
+            var placeDto = new PlaceDTO(
+                reservation.Place.Id,
+                reservation.Place.RoomsCount,
+                reservation.Place.Size,
+                reservation.Place.Address,
+                reservation.Place.Description,
+                reservation.Place.Price,
+                reservation.Place.UserId
+            );
+
+            var userDto = new UserDTO(
+                reservation.User.Id,
+                reservation.User.UserName ?? string.Empty,
+                reservation.User.Email ?? string.Empty
+            );
 
             var dto = new ReservationDTO(
                 reservation.Id,
@@ -85,7 +122,9 @@ namespace RentalManagement.Controllers
                 reservation.StartDate,
                 reservation.EndDate,
                 reservation.Status.ToString(),
-                reservation.Price
+                reservation.Price,
+                placeDto,
+                userDto
             );
 
             return Ok(dto);
@@ -105,7 +144,9 @@ namespace RentalManagement.Controllers
         [HttpPost]
         public async Task<ActionResult<ReservationDTO>> CreateReservation(int placeId, [Validate] CreateReservationDTO createReservationDto)
         {
-            var place = await _context.Places.FirstOrDefaultAsync(p => p.Id == placeId);
+            var place = await _context.Places
+                                    .Include(r => r.User)
+                                    .FirstOrDefaultAsync(p => p.Id == placeId);
             if (place == null)
                 return NotFound("Place not found");
 
@@ -134,15 +175,36 @@ namespace RentalManagement.Controllers
             await _context.Reservations.AddAsync(reservation);
             await _context.SaveChangesAsync();
 
-            var reservationDto = new ReservationDTO
-            (
+            var placeDto = new PlaceDTO(
+                reservation.Place.Id,
+                reservation.Place.RoomsCount,
+                reservation.Place.Size,
+                reservation.Place.Address,
+                reservation.Place.Description,
+                reservation.Place.Price,
+                reservation.Place.UserId
+            );
+
+            var user = await _context.Users.FindAsync(reservation.UserId);
+            if (user == null)
+                return NotFound("User not found");
+
+            var userDto = new UserDTO(
+                user.Id,
+                user.UserName ?? string.Empty,
+                user.Email ?? string.Empty
+            );
+
+            var reservationDto = new ReservationDTO(
                 reservation.Id,
                 reservation.Place.Id,
                 reservation.CreatedAt,
                 reservation.StartDate,
                 reservation.EndDate,
                 reservation.Status.ToString(),
-                reservation.Price
+                reservation.Price,
+                placeDto,
+                userDto
             );
 
             return CreatedAtAction(nameof(CreateReservation), new { id = reservation.Id }, reservationDto);
@@ -171,12 +233,10 @@ namespace RentalManagement.Controllers
 
             var existingReservation = await _context.Reservations
                                                     .Include(r => r.Place)
+                                                    .Include(r => r.User)
                                                     .FirstOrDefaultAsync(r => r.Id == reservationId);
             if (existingReservation == null)
                 return NotFound("Reservation not found");
-
-            if (Utils.HasConflictingReservations(_context, existingReservation.Place.Id, updateReservationDto.StartDate.ToUniversalTime(), updateReservationDto.EndDate.ToUniversalTime()))
-                return Conflict("The reservation dates overlap with an existing confirmed reservation.");
 
             if (!HttpContext.User.IsInRole(UserRoles.Admin) &&
                 HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub) != existingReservation.UserId &&
@@ -195,6 +255,22 @@ namespace RentalManagement.Controllers
             _context.Entry(existingReservation).State = EntityState.Modified;
             await _context.SaveChangesAsync();
 
+            var placeDto = new PlaceDTO(
+                existingReservation.Place.Id,
+                existingReservation.Place.RoomsCount,
+                existingReservation.Place.Size,
+                existingReservation.Place.Address,
+                existingReservation.Place.Description,
+                existingReservation.Place.Price,
+                existingReservation.Place.UserId
+            );
+
+            var userDto = new UserDTO(
+                existingReservation.User.Id,
+                existingReservation.User.UserName ?? string.Empty,
+                existingReservation.User.Email ?? string.Empty
+            );
+
             var dto = new ReservationDTO(
                 existingReservation.Id,
                 existingReservation.Place.Id,
@@ -202,7 +278,9 @@ namespace RentalManagement.Controllers
                 existingReservation.StartDate,
                 existingReservation.EndDate,
                 existingReservation.Status.ToString(),
-                existingReservation.Price
+                existingReservation.Price,
+                placeDto,
+                userDto
             );
 
             return Ok(dto);

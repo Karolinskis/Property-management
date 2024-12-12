@@ -1,3 +1,4 @@
+using RentalManagement.Auth;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace RentalManagement.Entities.DTOs;
@@ -19,8 +20,10 @@ public class ReservationDTO
     public string Status { get; set; }
     /// <example>100.0</example>
     public float Price { get; set; }
+    public PlaceDTO Place { get; set; }
+    public UserDTO User { get; set; }
 
-    public ReservationDTO(int id, int placeId, DateTime createdAt, DateTime startDate, DateTime endDate, string status, float price)
+    public ReservationDTO(int id, int placeId, DateTime createdAt, DateTime startDate, DateTime endDate, string status, float price, PlaceDTO place, UserDTO user)
     {
         Id = id;
         PlaceId = placeId;
@@ -29,5 +32,7 @@ public class ReservationDTO
         EndDate = endDate;
         Status = status;
         Price = price;
+        Place = place;
+        User = user;
     }
 }
