@@ -168,7 +168,7 @@ Jei norite paleisti projektą naudojant Docker, naudokite šią komandą:
 docker-compose up
 ```
 
-### Naudotojo sąsajos wireframe
+## Naudotojo sąsajos wireframe
 
 Toliau pateikiami kai kurie naudotojo sąsajos wireframe pavyzdžiai.
 
@@ -187,7 +187,7 @@ Toliau pateikiami kai kurie naudotojo sąsajos wireframe pavyzdžiai.
    </tr>
 </table>
 
-### Naudotojo sąsajos dizainas
+## Naudotojo sąsajos dizainas
 
 Toliau pateikiami kai kurie naudotojo sąsajos dizaino pavyzdžiai.
 
@@ -221,17 +221,17 @@ Modalai
    </tr>
 </table>
 
-### UML "Deployment" diagrama
+## UML "Deployment" diagrama
 
 Naudojant "Docker" konteinerius, sistema susideda iš trijų komponentų: "Frontend", "Backend" ir "Database". Frontend patalpinome "Vercel" platformoje, o Backend ir Database patalpinome "DigitalOcean", Backend patalpinome "Docker" konteineryje, o Database patalpinome "PostgreSQL" konteineryje.
 
 ![Deployment diagram](docs/images/Deployment.jpg)
 
-### OpenAPI specifikacija
+## OpenAPI specifikacija
 
 Buvo realizuotos vietų, rezervacijų ir atsiliepimų CRUD operacijos. Taip pat buvo realizuota vartotojo autentifikacija ir autorizacija. Norint pamayti visą OpenAPI specifikaciją, spauskite [čia](docs/swagger.json).
 
-#### Autentifikacija
+### Autentifikacija
 
 - **Registracija** `(POST /api/Authentication/Register)`: Leidžia vartotojams registruotis sistemoje pateikiant vartotojo duomenis.
 
@@ -291,7 +291,7 @@ Buvo realizuotos vietų, rezervacijų ir atsiliepimų CRUD operacijos. Taip pat 
   HTTP/1.1 200 OK
   ```
 
-#### Vietos
+### Vietos
 
 - **Gauti visas vietas** `(GET /api/Places)`: Grąžina visų vietų sąrašą.
 
@@ -494,7 +494,7 @@ Buvo realizuotos vietų, rezervacijų ir atsiliepimų CRUD operacijos. Taip pat 
    }
   ```
 
-#### Rezervacijos
+### Rezervacijos
 
 - **Gauti visas rezervacijas vietai** `(GET /api/Places/{placeId}/Reservations)`: Grąžina visų rezervacijų sąrašą konkrečiai vietai.
 
@@ -744,7 +744,7 @@ Buvo realizuotos vietų, rezervacijų ir atsiliepimų CRUD operacijos. Taip pat 
    }
   ```
 
-#### Atsiliepimai
+### Atsiliepimai
 
 - **Gauti visus atsiliepimus vietai** `(GET /api/Places/{placeId}/Reviews)`: Grąžina visų atsiliepimų sąrašą konkrečiai vietai.
 
@@ -973,18 +973,325 @@ Buvo realizuotos vietų, rezervacijų ir atsiliepimų CRUD operacijos. Taip pat 
   }
   ```
 
-#### API Schemos
+### API Schemos
 
 - RegisterUserDTO: Aprašo vartotojo registracijos duomenis.
+  - Pavyzdys:
+- **RegisterUserDTO**: Aprašo vartotojo registracijos duomenis.
+
+  - Pavyzdys:
+    ```json
+    {
+      "userName": "JohnDoe",
+      "email": "JohnDoe@email.com",
+      "roles": ["Tennant", "Owner"],
+      "password": "password123"
+    }
+    ```
+
+- **LoginUserDTO**: Aprašo vartotojo prisijungimo duomenis.
+
+  - Pavyzdys:
+    ```json
+    {
+      "userName": "JohnDoe",
+      "password": "password123"
+    }
+    ```
+
+- **CreatePlaceDTO**: Aprašo vietos kūrimo duomenis.
+
+  - Pavyzdys:
+    ```json
+    {
+      "roomsCount": 3,
+      "size": 100,
+      "address": "1234 Main St, Springfield, IL 62701",
+      "description": "Beautiful place with a view of the park",
+      "price": 1000
+    }
+    ```
+
+- **PlaceDTO**: Aprašo vietos duomenis.
+
+  - Pavyzdys:
+    ```json
+    {
+      "id": 1,
+      "roomsCount": 3,
+      "size": 100,
+      "address": "1234 Main St, Springfield, IL 62701",
+      "description": "Beautiful place with a view of the park",
+      "price": 1000,
+      "userId": "user123"
+    }
+    ```
+
+- **CreateReservationDTO**: Aprašo rezervacijos kūrimo duomenis.
+
+  - Pavyzdys:
+    ```json
+    {
+      "startDate": "2021-09-01T00:00:00Z",
+      "endDate": "2021-09-10T00:00:00Z",
+      "price": 100
+    }
+    ```
+
+- **ReservationDTO**: Aprašo rezervacijos duomenis.
+
+  - Pavyzdys:
+    ```json
+    {
+      "id": 1,
+      "placeId": 1,
+      "createdAt": "2021-09-01T00:00:00",
+      "startDate": "2021-09-01T00:00:00",
+      "endDate": "2021-09-10T00:00:00",
+      "status": "Pending",
+      "price": 100,
+      "place": {
+        "id": 1,
+        "roomsCount": 3,
+        "size": 100,
+        "address": "1234 Main St, Springfield, IL 62701",
+        "description": "Beautiful place with a view of the park",
+        "price": 1000
+      },
+      "user": {
+        "id": "user123",
+        "userName": "JohnDoe",
+        "email": "JohnDoe@email.com"
+      }
+    }
+    ```
+
+- **CreateReviewDTO**: Aprašo atsiliepimo kūrimo duomenis.
+
+  - Pavyzdys:
+    ```json
+    {
+      "rating": 5,
+      "comment": "Great place!"
+    }
+    ```
+
+- **ReviewDTO**: Aprašo atsiliepimo duomenis.
+
+  - Pavyzdys:
+    ```json
+    {
+      "id": 1,
+      "reservationId": 1,
+      "rating": 5,
+      "comment": "Great place!",
+      "user": {
+        "id": "user123",
+        "userName": "JohnDoe",
+        "email": "JohnDoe@email.com"
+      }
+    }
+    ```
+
+- **UpdatePlaceDTO**: Aprašo vietos atnaujinimo duomenis.
+
+  - Pavyzdys:
+    ```json
+    {
+      "roomsCount": 3,
+      "size": 100,
+      "address": "1234 Main St, Springfield, IL 62701",
+      "description": "Beautiful place with a view of the park",
+      "price": 1000
+    }
+    ```
+
+- **UpdateReservationDTO**: Aprašo rezervacijos atnaujinimo duomenis.
+
+  - Pavyzdys:
+    ```json
+    {
+      "startDate": "2021-09-01T00:00:00Z",
+      "endDate": "2021-09-10T00:00:00Z",
+      "status": "Pending",
+      "price": 100
+    }
+    ```
+
+- **UpdateReviewDTO**: Aprašo atsiliepimo atnaujinimo duomenis.
+
+  - Pavyzdys:
+    ```json
+    {
+      "rating": 5,
+      "comment": "Great place!"
+    }
+    ```
+
+- **UserDTO**: Aprašo vartotojo duomenis.
+
+  - Pavyzdys:
+    ```json
+    {
+      "id": "user123",
+      "userName": "JohnDoe",
+      "email": "JohnDoe@email.com"
+    }
+    ```
+
+- **ValidationProblemDetails**: Aprašo validacijos klaidų duomenis.
+  - Pavyzdys:
+    ```json
+    {
+      "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+      "title": "One or more validation errors occurred.",
+      "status": 400,
+      "detail": "The request contains invalid data.",
+      "errors": {
+        "Email": ["The Email field is required."],
+        "Password": ["The Password field is required."]
+      }
+    }
+    ```
 - LoginUserDTO: Aprašo vartotojo prisijungimo duomenis.
+  - Pavyzdys:
+  ```json
+  {
+    "userName": "JohnDoe",
+    "password": "password123"
+  }
+  ```
 - CreatePlaceDTO: Aprašo vietos kūrimo duomenis.
+  - Pavyzdys:
+  ```json
+  {
+    "roomsCount": 3,
+    "size": 100,
+    "address": "1234 Main St, Springfield, IL 62701",
+    "description": "Beautiful place with a view of the park",
+    "price": 1000
+  }
+  ```
 - PlaceDTO: Aprašo vietos duomenis.
+  - Pavyzdys:
+  ```json
+  {
+    "id": 1,
+    "roomsCount": 3,
+    "size": 100,
+    "address": "1234 Main St, Springfield, IL 62701",
+    "description": "Beautiful place with a view of the park",
+    "price": 1000,
+    "userId": "user123"
+  }
+  ```
 - CreateReservationDTO: Aprašo rezervacijos kūrimo duomenis.
+  - Pavyzdys:
+  ```json
+  {
+    "startDate": "2021-09-01T00:00:00Z",
+    "endDate": "2021-09-10T00:00:00Z",
+    "price": 100
+  }
+  ```
 - ReservationDTO: Aprašo rezervacijos duomenis.
+  - Pavyzdys:
+  ```json
+  {
+    "id": 1,
+    "placeId": 1,
+    "createdAt": "2021-09-01T00:00:00",
+    "startDate": "2021-09-01T00:00:00",
+    "endDate": "2021-09-10T00:00:00",
+    "status": "Pending",
+    "price": 100,
+    "place": {
+      "id": 1,
+      "roomsCount": 3,
+      "size": 100,
+      "address": "1234 Main St, Springfield, IL 62701",
+      "description": "Beautiful place with a view of the park",
+      "price": 1000
+    },
+    "user": {
+      "id": "user123",
+      "userName": "JohnDoe",
+      "email": "JohnDoe@email.com"
+    }
+  }
+  ```
 - CreateReviewDTO: Aprašo atsiliepimo kūrimo duomenis.
+  - Pavyzdys:
+  ```json
+  {
+    "rating": 5,
+    "comment": "Great place!"
+  }
+  ```
 - ReviewDTO: Aprašo atsiliepimo duomenis.
+  - Pavyzdys:
+  ```json
+  {
+    "id": 1,
+    "reservationId": 1,
+    "rating": 5,
+    "comment": "Great place!",
+    "user": {
+      "id": "user123",
+      "userName": "JohnDoe",
+      "email": "JohnDoe@email.com"
+    }
+  }
+  ```
 - UpdatePlaceDTO: Aprašo vietos atnaujinimo duomenis.
+  - Pavyzdys:
+  ```json
+  {
+    "roomsCount": 3,
+    "size": 100,
+    "address": "1234 Main St, Springfield, IL 62701",
+    "description": "Beautiful place with a view of the park",
+    "price": 1000
+  }
+  ```
 - UpdateReservationDTO: Aprašo rezervacijos atnaujinimo duomenis.
+  - Pavyzdys:
+  ```json
+  {
+    "startDate": "2021-09-01T00:00:00Z",
+    "endDate": "2021-09-10T00:00:00Z",
+    "status": "Pending",
+    "price": 100
+  }
+  ```
 - UpdateReviewDTO: Aprašo atsiliepimo atnaujinimo duomenis.
+  - Pavyzdys:
+  ```json
+  {
+    "rating": 5,
+    "comment": "Great place!"
+  }
+  ```
 - UserDTO: Aprašo vartotojo duomenis.
+  - Pavyzdys:
+  ```json
+  {
+    "id": "user123",
+    "userName": "JohnDoe",
+    "email": "JohnDoe@email.com"
+  }
+  ```
 - ValidationProblemDetails: Aprašo validacijos klaidų duomenis.
+  - Pavyzdys:
+  ```json
+  {
+    "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+    "title": "One or more validation errors occurred.",
+    "status": 400,
+    "detail": "The request contains invalid data.",
+    "errors": {
+      "Email": ["The Email field is required."],
+      "Password": ["The Password field is required."]
+    }
+  }
+  ```
