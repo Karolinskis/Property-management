@@ -82,7 +82,7 @@ namespace RentalManagement.Controllers
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
-                SameSite = SameSiteMode.Lax,
+                SameSite = SameSiteMode.None,
                 Expires = expiresAt,
                 Secure = _environment.IsProduction()
             };
