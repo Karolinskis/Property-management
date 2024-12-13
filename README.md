@@ -170,6 +170,8 @@ docker-compose up
 
 ### Naudotojo sąsajos wireframe
 
+Toliau pateikiami kai kurie naudotojo sąsajos wireframe pavyzdžiai.
+
 <table>
    <tr>
       <td><img src="docs/images/wireframe/Register.png" alt="Register" width="500" height="400"></td>
@@ -186,6 +188,8 @@ docker-compose up
 </table>
 
 ### Naudotojo sąsajos dizainas
+
+Toliau pateikiami kai kurie naudotojo sąsajos dizaino pavyzdžiai.
 
 <table>
    <tr>
@@ -219,15 +223,19 @@ Modalai
 
 ### UML "Deployment" diagrama
 
+Naudojant "Docker" konteinerius, sistema susideda iš trijų komponentų: "Frontend", "Backend" ir "Database". Frontend patalpinome "Vercel" platformoje, o Backend ir Database patalpinome "DigitalOcean", Backend patalpinome "Docker" konteineryje, o Database patalpinome "PostgreSQL" konteineryje.
+
 ![Deployment diagram](docs/images/Deployment.jpg)
 
 ### OpenAPI specifikacija
 
-Buvo realizuotos vietų, rezervacijų ir atsiliepimų CRUD operacijos. Taip pat buvo realizuota vartotojo autentifikacija ir autorizacija.
+Buvo realizuotos vietų, rezervacijų ir atsiliepimų CRUD operacijos. Taip pat buvo realizuota vartotojo autentifikacija ir autorizacija. Norint pamayti visą OpenAPI specifikaciją, spauskite [čia](docs/swagger.json).
 
 #### Autentifikacija
 
 - **Registracija** `(POST /api/Authentication/Register)`: Leidžia vartotojams registruotis sistemoje pateikiant vartotojo duomenis.
+
+  - Užklausa
 
   ```json
   {
@@ -238,28 +246,74 @@ Buvo realizuotos vietų, rezervacijų ir atsiliepimų CRUD operacijos. Taip pat 
   }
   ```
 
+  - Atsakymo pavyzdys:
+
+  ```http
+  HTTP/1.1 200 OK
+  ```
+
 - **Prisijungimas** `(POST /api/Authentication/Login)`: Leidžia vartotojams prisijungti prie sistemos pateikiant vartotojo vardą ir slaptažodį.
+
+  - Užklausa
 
   ```json
   {
     "userName": "JohnDoe",
     "password": "password123"
+  }
+  ```
+
+  - Atsakymo pavyzdys:
+
+  ```http
+  HTTP/1.1 200 OK
+  {
+    "accessToken": "eyJhb"
   }
   ```
 
 - **Atnaujinti prisijungimo žetoną** `(POST /api/Authentication/RefreshToken)`: Leidžia atnaujinti prisijungimo žetoną.
-  ```json
+
+  - Atsakymo pavyzdys:
+
+  ```http
+  HTTP/1.1 200 OK
   {
-    "userName": "JohnDoe",
-    "password": "password123"
+      "accessToken": "eyJhb"
   }
   ```
+
 - **Atsijungimas** `(POST /api/Authentication/Logout)`: Leidžia vartotojams atsijungti nuo sistemos.
+
+  - Atsakymo pavyzdys:
+
+  ```http
+  HTTP/1.1 200 OK
+  ```
 
 #### Vietos
 
 - **Gauti visas vietas** `(GET /api/Places)`: Grąžina visų vietų sąrašą.
+
+  - Atsakymo pavyzdys:
+
+  ```http
+  HTTP/1.1 200 OK
+  [
+    {
+      "id": 1,
+      "roomsCount": 3,
+      "size": 100,
+      "address": "1234 Main St, Springfield, IL 62701",
+      "description": "Beautiful place with a view of the park",
+      "price": 1000
+    }
+  ]
+  ```
+
 - Sukurti naują vietą `(POST /api/Places)`: Leidžia sukurti naują vietą pateikiant vietos duomenis.
+
+  - Užklausa
 
   ```json
   {
@@ -268,11 +322,84 @@ Buvo realizuotos vietų, rezervacijų ir atsiliepimų CRUD operacijos. Taip pat 
     "address": "1234 Main St, Springfield, IL 62701",
     "description": "Beautiful place with a view of the park",
     "price": 1000
+  }
+  ```
+
+  - Atsakymų pavyzdžiai:
+
+  ```http
+  HTTP/1.1 201 Created
+  {
+     "roomsCount": 3,
+     "size": 100,
+     "address": "1234 Main St, Springfield, IL 62701",
+     "description": "Beautiful place with a view of the park",
+     "price": 1000
+  }
+  ```
+
+  ```http
+  HTTP/1.1 400 Bad Request
+  {
+     "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+     "title": "One or more validation errors occurred.",
+     "status": 400,
+     "errors": {
+        "roomsCount": [
+           "The RoomsCount field is required."
+        ],
+        "size": [
+           "The Size field is required."
+        ],
+        "address": [
+           "The Address field is required."
+        ],
+        "price": [
+           "The Price field is required."
+        ]
+     }
+  }
+  ```
+
+  ```http
+  HTTP/1.1 401 Unauthorized
+  {
+        "type": "https://tools.ietf.org/html/rfc7235#section-3.1",
+        "title": "Unauthorized",
+        "status": 401,
+        "detail": "You are not authorized to access this resource."
   }
   ```
 
 - **Gauti vietą pagal ID** `(GET /api/Places/{placeId})`: Grąžina vietos informaciją pagal pateiktą ID.
+
+  - Atsakymų pavyzdžiai:
+
+  ```http
+  HTTP/1.1 200 OK
+  {
+    "roomsCount": 3,
+    "size": 100,
+    "address": "1234 Main St, Springfield, IL 62701",
+    "description": "Beautiful place with a view of the park",
+    "price": 1000
+  }
+  ```
+
+  ```http
+  HTTP/1.1 404 Not Found
+  {
+   "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+   "title": "Not Found",
+   "status": 404,
+   "detail": "The resource you requested does not exist."
+  }
+  ```
+
 - **Atnaujinti vietą pagal ID** `(PUT /api/Places/{placeId})`: Leidžia atnaujinti vietos informaciją pagal pateiktą ID.
+
+  - Užklausa
+
   ```json
   {
     "roomsCount": 3,
@@ -282,12 +409,123 @@ Buvo realizuotos vietų, rezervacijų ir atsiliepimų CRUD operacijos. Taip pat 
     "price": 1000
   }
   ```
+
+  - Atsakymų pavyzdžiai:
+
+  ```http
+  HTTP/1.1 200 OK
+   {
+      "roomsCount": 3,
+      "size": 100,
+      "address": "1234 Main St, Springfield, IL 62701",
+      "description": "Beautiful place with a view of the park",
+      "price": 1000
+   }
+  ```
+
+  ```http
+  HTTP/1.1 400 Bad Request
+  {
+      "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+      "title": "One or more validation errors occurred.",
+      "status": 400,
+      "errors": {
+         "roomsCount": [
+         "The RoomsCount field is required."
+         ],
+         "size": [
+         "The Size field is required."
+         ],
+         "address": [
+         "The Address field is required."
+         ],
+         "price": [
+         "The Price field is required."
+         ]
+      }
+  }
+  ```
+
+  ```http
+  HTTP/1.1 403 Forbidden
+  {
+        "type": "https://tools.ietf.org/html/rfc7231#section-6.5.3",
+        "title": "Forbidden",
+        "status": 403,
+        "detail": "You are not allowed to access this resource."
+  }
+  ```
+
+  ```http
+  HTTP/1.1 404 Not Found
+   {
+         "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+         "title": "Not Found",
+         "status": 404,
+         "detail": "The resource you requested does not exist."
+   }
+  ```
+
 - **Ištrinti vietą pagal ID** `(DELETE /api/Places/{placeId})`: Leidžia ištrinti vietą pagal pateiktą ID.
+
+  - Atsakymų pavyzdžiai:
+
+  ```http
+  HTTP/1.1 204 No Content
+  ```
+
+  ```http
+  HTTP/1.1 403 Forbidden
+  {
+        "type": "https://tools.ietf.org/html/rfc7231#section-6.5.3",
+        "title": "Forbidden",
+        "status": 403,
+        "detail": "You are not allowed to access this resource."
+  }
+  ```
+
+  ```http
+  HTTP/1.1 404 Not Found
+   {
+         "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+         "title": "Not Found",
+         "status": 404,
+         "detail": "The resource you requested does not exist."
+   }
+  ```
 
 #### Rezervacijos
 
 - **Gauti visas rezervacijas vietai** `(GET /api/Places/{placeId}/Reservations)`: Grąžina visų rezervacijų sąrašą konkrečiai vietai.
+
+  - Atsakymų pavyzdžiai:
+
+  ```http
+  HTTP/1.1 200 OK
+  [
+    {
+      "id": 1,
+      "startDate": "2021-09-01T00:00:00Z",
+      "endDate": "2021-09-10T00:00:00Z",
+      "price": 100
+    }
+  ]
+  ```
+
+  ```http
+  HTTP/1.1 404 Not Found
+   {
+         "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+         "title": "Not Found",
+         "status": 404,
+         "detail": "The resource you requested does not exist."
+   }
+  ```
+
 - **Sukurti naują rezervaciją** `(POST /api/Places/{placeId}/Reservations)`: Leidžia sukurti naują rezervaciją konkrečiai vietai.
+
+  - Užklausa
+
   ```json
   {
     "startDate": "2021-09-01T00:00:00Z",
@@ -295,8 +533,96 @@ Buvo realizuotos vietų, rezervacijų ir atsiliepimų CRUD operacijos. Taip pat 
     "price": 100
   }
   ```
+
+  - Atsakymų pavyzdžiai:
+
+  ```http
+  HTTP/1.1 201 Created
+  {
+    "startDate": "2021-09-01T00:00:00Z",
+    "endDate": "2021-09-10T00:00:00Z",
+    "price": 100
+  }
+  ```
+
+  ```http
+  HTTP/1.1 400 Bad Request
+  {
+      "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+      "title": "One or more validation errors occurred.",
+      "status": 400,
+      "errors": {
+         "startDate": [
+         "The StartDate field is required."
+         ],
+         "endDate": [
+         "The EndDate field is required."
+         ],
+         "price": [
+         "The Price field is required."
+         ]
+      }
+  }
+  ```
+
+  ```http
+  HTTP/1.1 401 Unauthorized
+  {
+        "type": "https://tools.ietf.org/html/rfc7235#section-3.1",
+        "title": "Unauthorized",
+        "status": 401,
+        "detail": "You are not authorized to access this resource."
+  }
+  ```
+
+  ```http
+  HTTP/1.1 404 Not Found
+   {
+          "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+          "title": "Not Found",
+          "status": 404,
+          "detail": "The resource you requested does not exist."
+    }
+  ```
+
+  ```http
+  HTTP/1.1 409 Conflict
+  {
+        "type": "https://tools.ietf.org/html/rfc7231#section-6.5.8",
+        "title": "Conflict",
+        "status": 409,
+        "detail": "The reservation dates overlap with an existing reservation."
+  }
+  ```
+
 - **Gauti rezervaciją pagal ID** `(GET /api/Places/{placeId}/Reservations/{reservationId})`: Grąžina rezervacijos informaciją pagal pateiktą ID.
+
+  - Atsakymų pavyzdžiai:
+
+  ```http
+  HTTP/1.1 200 OK
+  {
+    "id": 1,
+    "startDate": "2021-09-01T00:00:00Z",
+    "endDate": "2021-09-10T00:00:00Z",
+    "price": 100
+  }
+  ```
+
+  ```http
+  HTTP/1.1 404 Not Found
+   {
+         "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+         "title": "Not Found",
+         "status": 404,
+         "detail": "The resource you requested does not exist."
+   }
+  ```
+
 - **Atnaujinti rezervaciją pagal ID** `(PUT /api/Places/{placeId}/Reservations/{reservationId})`: Leidžia atnaujinti rezervacijos informaciją pagal pateiktą ID.
+
+  - Užklausa
+
   ```json
   {
     "startDate": "2021-09-01T00:00:00Z",
@@ -304,21 +630,348 @@ Buvo realizuotos vietų, rezervacijų ir atsiliepimų CRUD operacijos. Taip pat 
     "price": 100
   }
   ```
+
+  - Atsakymų pavyzdžiai:
+
+  ```http
+  HTTP/1.1 200 OK
+  {
+      "startDate": "2021-09-01T00:00:00Z",
+      "endDate": "2021-09-10T00:00:00Z",
+      "price": 100
+  }
+  ```
+
+  ```http
+  HTTP/1.1 400 Bad Request
+  {
+      "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+      "title": "One or more validation errors occurred.",
+      "status": 400,
+      "errors": {
+         "startDate": [
+         "The StartDate field is required."
+         ],
+         "endDate": [
+         "The EndDate field is required."
+         ],
+         "price": [
+         "The Price field is required."
+         ]
+      }
+  }
+  ```
+
+  ```http
+  HTTP/1.1 401 Unauthorized
+  {
+        "type": "https://tools.ietf.org/html/rfc7235#section-3.1",
+        "title": "Unauthorized",
+        "status": 401,
+        "detail": "You are not authorized to access this resource."
+  }
+  ```
+
+  ```http
+  HTTP/1.1 404 Not Found
+   {
+         "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+         "title": "Not Found",
+         "status": 404,
+         "detail": "The resource you requested does not exist."
+   }
+  ```
+
+  ```http
+  HTTP/1.1 422 Unprocessable Entity
+  {
+        "type": "https://tools.ietf.org/html/rfc7231#section-6.5.14",
+        "title": "Unprocessable Entity",
+        "status": 422,
+        "detail": "The updated Reservation is invalid"
+  }
+  ```
+
 - **Ištrinti rezervaciją pagal ID** `(DELETE /api/Places/{placeId}/Reservations/{reservationId})`: Leidžia ištrinti rezervaciją pagal pateiktą ID.
+
+  - Atsakymų pavyzdžiai:
+
+  ```http
+  HTTP/1.1 204 No Content
+  ```
+
+  ```http
+  HTTP/1.1 400 Bad Request
+  {
+      "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+      "title": "One or more validation errors occurred.",
+      "status": 400,
+      "errors": {
+         "reservationId": [
+         "The ReservationId field is required."
+         ]
+      }
+  }
+  ```
+
+  ```http
+  HTTP/1.1 401 Unauthorized
+  {
+        "type": "https://tools.ietf.org/html/rfc7235#section-3.1",
+        "title": "Unauthorized",
+        "status": 401,
+        "detail": "You are not authorized to access this resource."
+  }
+  ```
+
+  ```http
+  HTTP/1.1 403 Forbidden
+   {
+         "type": "https://tools.ietf.org/html/rfc7231#section-6.5.3",
+         "title": "Forbidden",
+         "status": 403,
+         "detail": "You are not allowed to access this resource."
+   }
+  ```
+
+  ```http
+  HTTP/1.1 404 Not Found
+   {
+         "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+         "title": "Not Found",
+         "status": 404,
+         "detail": "The resource you requested does not exist."
+   }
+  ```
 
 #### Atsiliepimai
 
 - **Gauti visus atsiliepimus vietai** `(GET /api/Places/{placeId}/Reviews)`: Grąžina visų atsiliepimų sąrašą konkrečiai vietai.
+
+  - Atsakymo pavyzdys:
+
+  ```http
+  HTTP/1.1 200 OK
+  [
+    {
+      "id": 1,
+      "rating": 5,
+      "comment": "Great place!"
+    }
+  ]
+  ```
+
 - **Gauti atsiliepimą pagal rezervacijos ID** `(GET /api/Places/{placeId}/Reservations/{reservationId}/Reviews)`: Grąžina atsiliepimą pagal rezervacijos ID.
+
+  - Atsakymų pavyzdžiai:
+
+  ```http
+  HTTP/1.1 200 OK
+  {
+   "id": 1,
+   "rating": 5,
+   "comment": "Great place!"
+  }
+  ```
+
+  ```http
+  HTTP/1.1 404 Not Found
+   {
+         "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+         "title": "Not Found",
+         "status": 404,
+         "detail": "The resource you requested does not exist."
+   }
+  ```
+
 - **Sukurti naują atsiliepimą** `(POST /api/Places/{placeId}/Reservations/{reservationId}/Reviews)`: Leidžia sukurti naują atsiliepimą konkrečiai rezervacijai.
+
+  - Užklausa
+
   ```json
   {
     "rating": 5,
     "comment": "Great place!"
   }
   ```
+
+  - Atsakymų pavyzdžiai:
+
+  ```http
+  HTTP/1.1 201 Created
+  {
+      "rating": 5,
+      "comment": "Great place!"
+  }
+  ```
+
+  ```http
+  HTTP/1.1 400 Bad Request
+  {
+      "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+      "title": "One or more validation errors occurred.",
+      "status": 400,
+      "errors": {
+         "rating": [
+         "The Rating field is required."
+         ],
+         "comment": [
+         "The Comment field is required."
+         ]
+      }
+  }
+  ```
+
+  ```http
+  HTTP/1.1 401 Unauthorized
+   {
+         "type": "https://tools.ietf.org/html/rfc7235#section-3.1",
+         "title": "Unauthorized",
+         "status": 401,
+         "detail": "You are not authorized to access this resource."
+   }
+  ```
+
+  ```http
+  HTTP/1.1 404 Not Found
+  {
+       "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+       "title": "Not Found",
+       "status": 404,
+       "detail": "The resource you requested does not exist."
+  }
+  ```
+
+  ```http
+  HTTP/1.1 409 Conflict
+  {
+        "type": "https://tools.ietf.org/html/rfc7231#section-6.5.8",
+        "title": "Conflict",
+        "status": 409,
+        "detail": "The review already exists."
+  }
+
+  ```
+
 - **Atnaujinti atsiliepimą pagal ID** `(PUT /api/Places/{placeId}/Reservations/{reservationId}/Reviews/{reviewId})`: Leidžia atnaujinti atsiliepimą pagal pateiktą ID.
+
+  - Užklausa
+
+  ```json
+  {
+    "rating": 5,
+    "comment": "Great place!"
+  }
+  ```
+
+  - Atsakymų pavyzdžiai:
+
+  ```http
+  HTTP/1.1 200 OK
+   {
+         "rating": 5,
+         "comment": "Great place!"
+   }
+  ```
+
+  ```http
+  HTTP/1.1 400 Bad Request
+  {
+      "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+      "title": "One or more validation errors occurred.",
+      "status": 400,
+      "errors": {
+         "rating": [
+         "The Rating field is required."
+         ],
+         "comment": [
+         "The Comment field is required."
+         ]
+      }
+  }
+  ```
+
+  ```http
+  HTTP/1.1 401 Unauthorized
+  {
+        "type": "https://tools.ietf.org/html/rfc7235#section-3.1",
+        "title": "Unauthorized",
+        "status": 401,
+        "detail": "You are not authorized to access this resource."
+  }
+  ```
+
+  ```http
+  HTTP/1.1 403 Forbidden
+  {
+        "type": "https://tools.ietf.org/html/rfc7231#section-6.5.3",
+        "title": "Forbidden",
+        "status": 403,
+        "detail": "You are not allowed to access this resource."
+  }
+  ```
+
+  ```http
+  HTTP/1.1 404 Not Found
+  {
+  "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "The resource you requested does not exist."
+  }
+  ```
+
 - **Ištrinti atsiliepimą pagal ID** `(DELETE /api/Places/{placeId}/Reservations/{reservationId}/Reviews/{reviewId})`: Leidžia ištrinti atsiliepimą pagal pateiktą ID.
+
+  - Atsakymų pavyzdžiai:
+
+  ```http
+  HTTP/1.1 204 No Content
+  ```
+
+  ```http
+  HTTP/1.1 400 Bad Request
+  {
+      "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+      "title": "One or more validation errors occurred.",
+      "status": 400,
+      "errors": {
+         "reviewId": [
+         "The ReviewId field is required."
+         ]
+      }
+  }
+  ```
+
+  ```http
+  HTTP/1.1 401 Unauthorized
+  {
+        "type": "https://tools.ietf.org/html/rfc7235#section-3.1",
+        "title": "Unauthorized",
+        "status": 401,
+        "detail": "You are not authorized to access this resource."
+  }
+  ```
+
+  ```http
+  HTTP/1.1 403 Forbidden
+  {
+        "type": "https://tools.ietf.org/html/rfc7231#section-6.5.3",
+        "title": "Forbidden",
+        "status": 403,
+        "detail": "You are not allowed to access this resource."
+  }
+  ```
+
+  ```http
+  HTTP/1.1 404 Not Found
+  {
+        "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+        "title": "Not Found",
+        "status": 404,
+        "detail": "The resource you requested does not exist."
+  }
+  ```
 
 #### API Schemos
 
